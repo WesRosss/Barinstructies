@@ -1,0 +1,6 @@
+# This directory will contain MP4 video files and their corresponding JSON metadata files
+# Example structure:
+# - instructie-cocktail-maken.mp4
+# - instructie-cocktail-maken.json
+# - bier-tappen.mp4
+# - bier-tappen.json

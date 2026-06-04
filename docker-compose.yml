@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  barinstructies:
+    build: .
+    container_name: barinstructies
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the videos directory from host to container
+      - ./videos:/app/videos
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000

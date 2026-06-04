@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar Instructies</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Bar Instructies</h1>
+        <div class="controls">
+            <div class="search-container">
+                <input type="text" id="search" placeholder="Zoek instructie..." autocomplete="off">
+                <button id="search-clear" class="icon-btn" aria-label="Wissen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="filter-container">
+                <select id="tag-filter">
+                    <option value="">Alle tags</option>
+                </select>
+            </div>
+            <div class="view-toggle">
+                <button id="grid-view" class="view-btn active" aria-label="Grid weergave">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                </button>
+                <button id="list-view" class="view-btn" aria-label="Lijst weergave">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"/>
+                        <line x1="8" y1="12" x2="21" y2="12"/>
+                        <line x1="8" y1="18" x2="21" y2="18"/>
+                        <line x1="3" y1="6" x2="3.01" y2="6"/>
+                        <line x1="3" y1="12" x2="3.01" y2="12"/>
+                        <line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div id="video-count" class="video-count"></div>
+        <div id="videos-container" class="videos-container grid-view"></div>
+        <div id="no-results" class="no-results hidden">
+            <p>Geen video's gevonden</p>
+        </div>
+    </main>
+    
+    <div id="video-modal" class="modal hidden">
+        <div class="modal-content">
+            <button id="modal-close" class="icon-btn close-btn" aria-label="Sluiten">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+            <video id="modal-video" controls autoplay>
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="modal-info">
+                <h2 id="modal-title"></h2>
+                <div id="modal-tags" class="modal-tags"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
