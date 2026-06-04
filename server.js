@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3210;
 const VIDEOS_DIR = path.join(__dirname, 'videos');
 
 // Ensure videos directory exists

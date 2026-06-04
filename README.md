@@ -15,7 +15,7 @@ cd Barinstructies
 docker-compose up -d
 ```
 
-De website is nu beschikbaar op `http://localhost:3000`
+De website is nu beschikbaar op `http://localhost:3210`
 
 ### 2. Video's Toevoegen
 
@@ -41,7 +41,7 @@ De server detecteert automatisch nieuwe video's bij herstart.
 
 | Variabele | Default | Beschrijving |
 |-----------|---------|--------------|
-| `PORT` | 3000 | Poort waar de server op draait |
+| `PORT` | 3210 | Poort waar de server op draait |
 | `NODE_ENV` | production | Node.js omgeving |
 
 ### Docker Compose
@@ -54,7 +54,7 @@ services:
     build: .
     container_name: barinstructies
     ports:
-      - "3000:3000"
+      - "3210:3210"
     volumes:
       - ./videos:/app/videos
     restart: unless-stopped
@@ -71,7 +71,7 @@ server {
     ssl_certificate_key /path/to/key.pem;
     
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:3210;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -169,7 +169,7 @@ docker-compose up -d
 Wijzig de poort in `docker-compose.yml`:
 ```yaml
 ports:
-  - "3001:3000"
+  - "3211:3210"
 ```
 
 ## Licentie

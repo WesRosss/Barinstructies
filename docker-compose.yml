@@ -5,11 +5,11 @@ services:
     build: .
     container_name: barinstructies
     ports:
-      - "3000:3000"
+      - "3210:3210"
     volumes:
       # Mount the videos directory from host to container
       - ./videos:/app/videos
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3210

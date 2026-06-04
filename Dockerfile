@@ -18,7 +18,7 @@ COPY . .
 RUN mkdir -p /app/videos
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3210
 
 # Start the server
 CMD ["node", "server.js"]
