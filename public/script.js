@@ -1,24 +1,27 @@
 // ===== State =====
 let videos = [];
-let allTags = [];
-let currentView = 'grid';
+let allOnderwerpen = [];
+let allHoofdcategorieen = [];
 let currentSearch = '';
-let currentFilter = '';
+let currentOnderwerpFilter = '';
+let currentHoofdcategorieFilter = '';
+let currentVideo = null;
 
 // ===== DOM Elements =====
 const videosContainer = document.getElementById('videos-container');
 const searchInput = document.getElementById('search');
 const searchClearBtn = document.getElementById('search-clear');
-const tagFilterSelect = document.getElementById('tag-filter');
-const gridViewBtn = document.getElementById('grid-view');
-const listViewBtn = document.getElementById('list-view');
+const hoofdcategorieFilterSelect = document.getElementById('hoofdcategorie-filter');
+const onderwerpFilterSelect = document.getElementById('onderwerp-filter');
 const videoCountEl = document.getElementById('video-count');
 const noResultsEl = document.getElementById('no-results');
 const modal = document.getElementById('video-modal');
 const modalVideo = document.getElementById('modal-video');
 const modalTitle = document.getElementById('modal-title');
-const modalTags = document.getElementById('modal-tags');
+const modalOnderwerpen = document.getElementById('modal-onderwerpen');
 const modalClose = document.getElementById('modal-close');
+const modalSuggestions = document.getElementById('modal-suggestions');
+const suggestionsContainer = document.getElementById('suggestions-container');
 
 // ===== Play Icon SVG =====
 const playIconSVG = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -28,17 +31,20 @@ const playIconSVG = `<svg viewBox="0 0 24 24" fill="currentColor">
 // ===== Initialize =====
 async function init() {
     try {
-        // Fetch videos and tags in parallel
-        const [videosResponse, tagsResponse] = await Promise.all([
+        // Fetch videos, onderwerpen, and hoofdcategorieen in parallel
+        const [videosResponse, onderwerpenResponse, categorieenResponse] = await Promise.all([
             fetch('/api/videos'),
-            fetch('/api/tags')
+            fetch('/api/onderwerpen'),
+            fetch('/api/hoofdcategorieen')
         ]);
         
         videos = await videosResponse.json();
-        allTags = await tagsResponse.json();
+        allOnderwerpen = await onderwerpenResponse.json();
+        allHoofdcategorieen = await categorieenResponse.json();
         
-        // Populate tag filter
-        populateTagFilter();
+        // Populate filters
+        populateHoofdcategorieFilter();
+        populateOnderwerpFilter();
         
         // Render videos
         renderVideos();
@@ -55,14 +61,25 @@ async function init() {
     }
 }
 
-// ===== Populate Tag Filter =====
-function populateTagFilter() {
-    tagFilterSelect.innerHTML = '<option value="">Alle tags</option>';
-    allTags.forEach(tag => {
+// ===== Populate Hoofdcategorie Filter =====
+function populateHoofdcategorieFilter() {
+    hoofdcategorieFilterSelect.innerHTML = '<option value="">Alle categorieën</option>';
+    allHoofdcategorieen.forEach(categorie => {
         const option = document.createElement('option');
-        option.value = tag;
-        option.textContent = tag;
-        tagFilterSelect.appendChild(option);
+        option.value = categorie;
+        option.textContent = categorie;
+        hoofdcategorieFilterSelect.appendChild(option);
+    });
+}
+
+// ===== Populate Onderwerp Filter =====
+function populateOnderwerpFilter() {
+    onderwerpFilterSelect.innerHTML = '<option value="">Alle onderwerpen</option>';
+    allOnderwerpen.forEach(onderwerp => {
+        const option = document.createElement('option');
+        option.value = onderwerp;
+        option.textContent = onderwerp;
+        onderwerpFilterSelect.appendChild(option);
     });
 }
 
@@ -97,21 +114,29 @@ function filterAndSearchVideos() {
         const matchesSearch = currentSearch === '' || 
             video.title.toLowerCase().includes(currentSearch.toLowerCase()) ||
             video.filename.toLowerCase().includes(currentSearch.toLowerCase()) ||
-            (video.tags && video.tags.some(tag => 
-                tag.toLowerCase().includes(currentSearch.toLowerCase())));
+            (video.onderwerpen && video.onderwerpen.some(onderwerp => 
+                onderwerp.toLowerCase().includes(currentSearch.toLowerCase())));
         
-        // Tag filter
-        const matchesFilter = currentFilter === '' || 
-            (video.tags && video.tags.includes(currentFilter));
+        // Hoofdcategorie filter
+        const matchesHoofdcategorie = currentHoofdcategorieFilter === '' || 
+            (video.onderwerp_structuur && 
+             video.onderwerp_structuur.hoofdcategorie === currentHoofdcategorieFilter) ||
+            (video.context && video.context.locatie === currentHoofdcategorieFilter) ||
+            (video.onderwerpen && video.onderwerpen.length > 0 && 
+             video.onderwerpen[0] === currentHoofdcategorieFilter);
         
-        return matchesSearch && matchesFilter;
+        // Onderwerp filter
+        const matchesOnderwerp = currentOnderwerpFilter === '' || 
+            (video.onderwerpen && video.onderwerpen.includes(currentOnderwerpFilter));
+        
+        return matchesSearch && matchesHoofdcategorie && matchesOnderwerp;
     });
 }
 
 // ===== Create Video Card =====
 function createVideoCard(video) {
     const card = document.createElement('div');
-    card.className = `video-card ${currentView}-view`;
+    card.className = 'video-card';
     card.dataset.filename = video.filename;
     
     // Thumbnail section
@@ -141,20 +166,20 @@ function createVideoCard(video) {
     const title = document.createElement('h3');
     title.textContent = video.title || video.filename;
     
-    const tagsContainer = document.createElement('div');
-    tagsContainer.className = 'tags';
+    const onderwerpenContainer = document.createElement('div');
+    onderwerpenContainer.className = 'onderwerpen';
     
-    if (video.tags && video.tags.length > 0) {
-        video.tags.forEach(tag => {
-            const tagEl = document.createElement('span');
-            tagEl.className = 'tag';
-            tagEl.textContent = tag;
-            tagsContainer.appendChild(tagEl);
+    if (video.onderwerpen && video.onderwerpen.length > 0) {
+        video.onderwerpen.forEach(onderwerp => {
+            const onderwerpEl = document.createElement('span');
+            onderwerpEl.className = 'onderwerp';
+            onderwerpEl.textContent = onderwerp;
+            onderwerpenContainer.appendChild(onderwerpEl);
         });
     }
     
     info.appendChild(title);
-    info.appendChild(tagsContainer);
+    info.appendChild(onderwerpenContainer);
     
     // Combine
     card.appendChild(thumbnail);
@@ -167,28 +192,128 @@ function createVideoCard(video) {
 }
 
 // ===== Open Modal =====
-function openModal(video) {
+async function openModal(video) {
+    currentVideo = video;
     modalVideo.src = video.path;
     modalTitle.textContent = video.title || video.filename;
     
-    // Clear previous tags
-    modalTags.innerHTML = '';
+    // Clear previous onderwerpen
+    modalOnderwerpen.innerHTML = '';
     
-    // Add tags
-    if (video.tags && video.tags.length > 0) {
-        video.tags.forEach(tag => {
-            const tagEl = document.createElement('span');
-            tagEl.className = 'tag';
-            tagEl.textContent = tag;
-            modalTags.appendChild(tagEl);
+    // Add onderwerpen
+    if (video.onderwerpen && video.onderwerpen.length > 0) {
+        video.onderwerpen.forEach(onderwerp => {
+            const onderwerpEl = document.createElement('span');
+            onderwerpEl.className = 'onderwerp';
+            onderwerpEl.textContent = onderwerp;
+            modalOnderwerpen.appendChild(onderwerpEl);
         });
     }
+    
+    // Show suggestions
+    await showSuggestions(video);
     
     modal.classList.remove('hidden');
     modalVideo.focus();
     
     // Pause all other video thumbnails
     pauseAllThumbnails();
+    
+    // Setup video end handler for auto-play next
+    setupVideoEndHandler();
+}
+
+// ===== Show Suggestions =====
+async function showSuggestions(video) {
+    try {
+        const response = await fetch(`/api/suggesties/${encodeURIComponent(video.filename)}`);
+        const suggestions = await response.json();
+        
+        if (suggestions.length > 0) {
+            // Clear previous suggestions
+            suggestionsContainer.innerHTML = '';
+            
+            // Create suggestion cards
+            suggestions.forEach(suggestion => {
+                const suggestionCard = createSuggestionCard(suggestion);
+                suggestionsContainer.appendChild(suggestionCard);
+            });
+            
+            modalSuggestions.classList.remove('hidden');
+        } else {
+            modalSuggestions.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error loading suggestions:', error);
+        modalSuggestions.classList.add('hidden');
+    }
+}
+
+// ===== Create Suggestion Card =====
+function createSuggestionCard(video) {
+    const card = document.createElement('div');
+    card.className = 'suggestion-card';
+    card.dataset.filename = video.filename;
+    
+    // Thumbnail section
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'suggestion-thumbnail';
+    
+    const videoEl = document.createElement('video');
+    videoEl.src = video.path;
+    videoEl.muted = true;
+    videoEl.loop = true;
+    videoEl.playsInline = true;
+    videoEl.preload = 'metadata';
+    
+    const playIcon = document.createElement('div');
+    playIcon.className = 'play-icon';
+    playIcon.innerHTML = playIconSVG;
+    
+    thumbnail.appendChild(videoEl);
+    thumbnail.appendChild(playIcon);
+    
+    // Info section
+    const info = document.createElement('div');
+    info.className = 'suggestion-info';
+    
+    const title = document.createElement('h4');
+    title.textContent = video.title || video.filename;
+    
+    // Show reason if available
+    if (video.reason) {
+        const reason = document.createElement('span');
+        reason.className = 'suggestion-reason';
+        reason.textContent = video.reason;
+        info.appendChild(reason);
+    }
+    
+    info.appendChild(title);
+    
+    // Combine
+    card.appendChild(thumbnail);
+    card.appendChild(info);
+    
+    // Click handler
+    card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openModal(video);
+    });
+    
+    return card;
+}
+
+// ===== Setup Video End Handler =====
+function setupVideoEndHandler() {
+    // Remove previous handler if exists
+    modalVideo.onended = null;
+    
+    modalVideo.onended = async () => {
+        // Show suggestions more prominently when video ends
+        if (modalSuggestions && !modalSuggestions.classList.contains('hidden')) {
+            modalSuggestions.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    };
 }
 
 // ===== Close Modal =====
@@ -196,36 +321,19 @@ function closeModal() {
     modal.classList.add('hidden');
     modalVideo.pause();
     modalVideo.currentTime = 0;
+    modalVideo.onended = null;
+    
+    // Hide suggestions when modal closes
+    modalSuggestions.classList.add('hidden');
 }
 
 // ===== Pause All Thumbnails =====
 function pauseAllThumbnails() {
-    const videoElements = document.querySelectorAll('.video-thumbnail video');
+    const videoElements = document.querySelectorAll('.video-thumbnail video, .suggestion-thumbnail video');
     videoElements.forEach(videoEl => {
         videoEl.pause();
         videoEl.currentTime = 0;
     });
-}
-
-// ===== Toggle View =====
-function toggleView(view) {
-    currentView = view;
-    
-    // Update button states
-    gridViewBtn.classList.toggle('active', view === 'grid');
-    listViewBtn.classList.toggle('active', view === 'list');
-    
-    // Update container class
-    videosContainer.className = `videos-container ${view}-view`;
-    
-    // Update all cards
-    const cards = document.querySelectorAll('.video-card');
-    cards.forEach(card => {
-        card.className = `video-card ${view}-view`;
-    });
-    
-    // Save preference
-    localStorage.setItem('videoView', view);
 }
 
 // ===== Update Video Count =====
@@ -256,15 +364,20 @@ function setupEventListeners() {
         searchInput.focus();
     });
     
-    // Tag filter
-    tagFilterSelect.addEventListener('change', (e) => {
-        currentFilter = e.target.value;
+    // Hoofdcategorie filter
+    hoofdcategorieFilterSelect.addEventListener('change', (e) => {
+        currentHoofdcategorieFilter = e.target.value;
         renderVideos();
+        
+        // Update onderwerp filter based on selected category
+        updateOnderwerpFilterByCategory();
     });
     
-    // View toggle
-    gridViewBtn.addEventListener('click', () => toggleView('grid'));
-    listViewBtn.addEventListener('click', () => toggleView('list'));
+    // Onderwerp filter
+    onderwerpFilterSelect.addEventListener('change', (e) => {
+        currentOnderwerpFilter = e.target.value;
+        renderVideos();
+    });
     
     // Modal close
     modalClose.addEventListener('click', closeModal);
@@ -281,14 +394,40 @@ function setupEventListeners() {
         }
     });
     
-    // Load saved view preference
-    const savedView = localStorage.getItem('videoView') || 'grid';
-    if (savedView !== currentView) {
-        toggleView(savedView);
-    }
-    
     // Handle video thumbnail hover
     setupVideoThumbnailHover();
+}
+
+// ===== Update Onderwerp Filter By Category =====
+function updateOnderwerpFilterByCategory() {
+    if (currentHoofdcategorieFilter === '') {
+        // Show all onderwerpen
+        populateOnderwerpFilter();
+        return;
+    }
+    
+    // Filter onderwerpen based on selected category
+    const filteredOnderwerpen = allOnderwerpen.filter(onderwerp => {
+        // Find videos that have this onderwerp and match the category
+        const matchingVideos = videos.filter(v => 
+            v.onderwerpen && v.onderwerpen.includes(onderwerp) &&
+            ((v.onderwerp_structuur && v.onderwerp_structuur.hoofdcategorie === currentHoofdcategorieFilter) ||
+             (v.context && v.context.locatie === currentHoofdcategorieFilter) ||
+             (v.onderwerpen && v.onderwerpen[0] === currentHoofdcategorieFilter))
+        );
+        return matchingVideos.length > 0;
+    });
+    
+    onderwerpFilterSelect.innerHTML = '<option value="">Alle onderwerpen</option>';
+    filteredOnderwerpen.forEach(onderwerp => {
+        const option = document.createElement('option');
+        option.value = onderwerp;
+        option.textContent = onderwerp;
+        onderwerpFilterSelect.appendChild(option);
+    });
+    
+    // Reset onderwerp filter
+    currentOnderwerpFilter = '';
 }
 
 // ===== Setup Video Thumbnail Hover =====
@@ -305,7 +444,7 @@ function setupVideoThumbnailHover() {
     }, { threshold: 0.1 });
     
     // Observe all thumbnail videos
-    const thumbnailVideos = document.querySelectorAll('.video-thumbnail video');
+    const thumbnailVideos = document.querySelectorAll('.video-thumbnail video, .suggestion-thumbnail video');
     thumbnailVideos.forEach(videoEl => {
         observer.observe(videoEl);
         
