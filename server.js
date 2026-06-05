@@ -36,7 +36,8 @@ function getVideos() {
                 // Try to read metadata
                 let metadata = {
                     title: baseName.replace(/-/g, ' ').replace(/_/g, ' '),
-                    tags: []
+                    tags: [],
+                    onderwerpen: []
                 };
                 
                 if (fs.existsSync(jsonFile)) {
@@ -44,6 +45,12 @@ function getVideos() {
                         const jsonData = fs.readFileSync(jsonFile, 'utf8');
                         const jsonMetadata = JSON.parse(jsonData);
                         metadata = { ...metadata, ...jsonMetadata };
+                        
+                        // Backward compatibility: if onderwerpen is empty but tags exists, copy tags to onderwerpen
+                        if ((!metadata.onderwerpen || metadata.onderwerpen.length === 0) && 
+                            metadata.tags && metadata.tags.length > 0) {
+                            metadata.onderwerpen = [...metadata.tags];
+                        }
                     } catch (e) {
                         console.error(`Error reading metadata for ${file}:`, e.message);
                     }
@@ -81,24 +88,194 @@ app.get('/api/videos', (req, res) => {
     }
 });
 
-// API endpoint to get all unique tags
-app.get('/api/tags', (req, res) => {
+// API endpoint to get all unique onderwerpen
+app.get('/api/onderwerpen', (req, res) => {
     try {
         const videos = getVideos();
-        const tagsSet = new Set();
+        const onderwerpenSet = new Set();
         
         videos.forEach(video => {
+            if (video.onderwerpen && Array.isArray(video.onderwerpen)) {
+                video.onderwerpen.forEach(onderwerp => onderwerpenSet.add(onderwerp));
+            }
+            // Backward compatibility: also check tags
             if (video.tags && Array.isArray(video.tags)) {
-                video.tags.forEach(tag => tagsSet.add(tag));
+                video.tags.forEach(tag => onderwerpenSet.add(tag));
             }
         });
         
-        const tags = Array.from(tagsSet).sort();
-        res.json(tags);
+        const onderwerpen = Array.from(onderwerpenSet).sort();
+        res.json(onderwerpen);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to get tags' });
+        res.status(500).json({ error: 'Failed to get onderwerpen' });
     }
 });
+
+// API endpoint to get all unique tags (backward compatibility)
+app.get('/api/tags', (req, res) => {
+    res.redirect('/api/onderwerpen');
+});
+
+// API endpoint to get all unique hoofdcategorieën
+app.get('/api/hoofdcategorieen', (req, res) => {
+    try {
+        const videos = getVideos();
+        const categorieenSet = new Set();
+        
+        videos.forEach(video => {
+            // Check onderwerp_structuur
+            if (video.onderwerp_structuur && video.onderwerp_structuur.hoofdcategorie) {
+                categorieenSet.add(video.onderwerp_structuur.hoofdcategorie);
+            }
+            // Check context
+            if (video.context && video.context.locatie) {
+                categorieenSet.add(video.context.locatie);
+            }
+            // Fallback: first onderwerp as category
+            if (video.onderwerpen && video.onderwerpen.length > 0) {
+                categorieenSet.add(video.onderwerpen[0]);
+            }
+        });
+        
+        const categorieen = Array.from(categorieenSet).sort();
+        res.json(categorieen);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to get hoofdcategorieen' });
+    }
+});
+
+// API endpoint to get suggestions for a specific video
+app.get('/api/suggesties/:filename', (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const videos = getVideos();
+        
+        // Find the current video
+        const currentVideo = videos.find(v => v.filename === filename);
+        if (!currentVideo) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+        
+        // Get suggestions based on multiple criteria
+        const suggestions = getVideoSuggestions(currentVideo, videos);
+        
+        res.json(suggestions);
+    } catch (error) {
+        console.error('Error getting suggestions:', error);
+        res.status(500).json({ error: 'Failed to get suggestions' });
+    }
+});
+
+// Helper function to get video suggestions
+function getVideoSuggestions(currentVideo, allVideos) {
+    const suggestions = [];
+    const maxSuggestions = 6;
+    const currentFilename = currentVideo.filename;
+    
+    // Filter out the current video
+    const otherVideos = allVideos.filter(v => v.filename !== currentFilename);
+    
+    // 1. Same hoofdonderwerp, different subonderwerp (highest priority)
+    if (currentVideo.onderwerp_structuur) {
+        const { hoofdcategorie, hoofdonderwerp, subonderwerp } = currentVideo.onderwerp_structuur;
+        
+        if (hoofdcategorie && hoofdonderwerp) {
+            const sameHoofonderwerp = otherVideos.filter(v => 
+                v.onderwerp_structuur && 
+                v.onderwerp_structuur.hoofdcategorie === hoofdcategorie &&
+                v.onderwerp_structuur.hoofonderwerp === hoofdonderwerp &&
+                v.onderwerp_structuur.subonderwerp !== subonderwerp
+            );
+            
+            sameHoofonderwerp.forEach(v => {
+                if (suggestions.length < maxSuggestions) {
+                    suggestions.push({ ...v, reason: 'zelfde hoofdonderwerp' });
+                }
+            });
+        }
+    }
+    
+    // 2. Related onderwerpen from metadata
+    if (currentVideo.onderwerp_structuur && 
+        currentVideo.onderwerp_structuur.gerelateerde_onderwerpen) {
+        
+        currentVideo.onderwerp_structuur.gerelateerde_onderwerpen.forEach(related => {
+            const matchingVideos = otherVideos.filter(v => 
+                v.onderwerp_structuur &&
+                v.onderwerp_structuur.hoofdcategorie === related.hoofdcategorie &&
+                v.onderwerp_structuur.hoofonderwerp === related.hoofonderwerp &&
+                v.onderwerp_structuur.subonderwerp === related.subonderwerp
+            );
+            
+            matchingVideos.forEach(v => {
+                if (suggestions.length < maxSuggestions && 
+                    !suggestions.some(s => s.filename === v.filename)) {
+                    suggestions.push({ ...v, reason: 'gerelateerd onderwerp' });
+                }
+            });
+        });
+    }
+    
+    // 3. Same hoofdcategorie
+    if (currentVideo.onderwerp_structuur && currentVideo.onderwerp_structuur.hoofdcategorie) {
+        const sameCategorie = otherVideos.filter(v => 
+            v.onderwerp_structuur && 
+            v.onderwerp_structuur.hoofdcategorie === currentVideo.onderwerp_structuur.hoofdcategorie &&
+            !(v.onderwerp_structuur.hoofonderwerp === currentVideo.onderwerp_structuur.hoofonderwerp)
+        );
+        
+        sameCategorie.forEach(v => {
+            if (suggestions.length < maxSuggestions && 
+                !suggestions.some(s => s.filename === v.filename)) {
+                suggestions.push({ ...v, reason: 'zelfde hoofdcategorie' });
+            }
+        });
+    }
+    
+    // 4. Same context type
+    if (currentVideo.context && currentVideo.context.type) {
+        const sameContext = otherVideos.filter(v => 
+            v.context && v.context.type === currentVideo.context.type
+        );
+        
+        sameContext.forEach(v => {
+            if (suggestions.length < maxSuggestions && 
+                !suggestions.some(s => s.filename === v.filename)) {
+                suggestions.push({ ...v, reason: 'zelfde context' });
+            }
+        });
+    }
+    
+    // 5. Fallback: videos with overlapping onderwerpen
+    if (currentVideo.onderwerpen && currentVideo.onderwerpen.length > 0) {
+        currentVideo.onderwerpen.forEach(onderwerp => {
+            const matching = otherVideos.filter(v => 
+                v.onderwerpen && v.onderwerpen.includes(onderwerp) &&
+                v.filename !== currentFilename
+            );
+            
+            matching.forEach(v => {
+                if (suggestions.length < maxSuggestions && 
+                    !suggestions.some(s => s.filename === v.filename)) {
+                    suggestions.push({ ...v, reason: 'overlappend onderwerp' });
+                }
+            });
+        });
+    }
+    
+    // Remove duplicates and limit
+    const uniqueSuggestions = [];
+    const seenFilenames = new Set();
+    
+    suggestions.forEach(s => {
+        if (!seenFilenames.has(s.filename)) {
+            seenFilenames.add(s.filename);
+            uniqueSuggestions.push(s);
+        }
+    });
+    
+    return uniqueSuggestions.slice(0, maxSuggestions);
+}
 
 // Serve videos directory
 app.use('/videos', express.static(VIDEOS_DIR));

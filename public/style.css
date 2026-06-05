@@ -97,6 +97,61 @@ header {
     margin-left: auto;
 }
 
+.filter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.filter-container select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background-color: var(--card-background);
+    cursor: pointer;
+    min-width: 150px;
+    transition: all var(--transition-speed);
+}
+
+.filter-container select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+}
+
+/* ===== Install Button ===== */
+.install-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    white-space: nowrap;
+}
+
+.install-btn:hover {
+    background-color: var(--secondary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 102, 0, 0.3);
+}
+
+.install-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.install-btn.hidden {
+    display: none;
+}
+
 .search-container {
     flex: 1;
     min-width: 200px;
@@ -160,38 +215,7 @@ header {
     box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
 }
 
-.view-toggle {
-    display: flex;
-    gap: 0.25rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: var(--border-radius);
-    padding: 0.25rem;
-}
 
-.view-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: var(--border-radius);
-    color: white;
-    opacity: 0.7;
-    transition: all var(--transition-speed);
-}
-
-.view-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-.view-btn:hover {
-    opacity: 1;
-}
-
-.view-btn.active {
-    opacity: 1;
-    background-color: var(--secondary-color);
-}
 
 /* ===== Main Content ===== */
 main {
@@ -212,13 +236,9 @@ main {
     transition: all var(--transition-speed);
 }
 
-/* Grid View - Mobile First */
-.videos-container.grid-view {
+/* Grid View - Mobile First (default) */
+.videos-container {
     grid-template-columns: repeat(var(--grid-columns-mobile), 1fr);
-}
-
-.videos-container.list-view {
-    grid-template-columns: 1fr;
 }
 
 /* ===== Video Card ===== */
@@ -296,14 +316,14 @@ main {
     text-overflow: ellipsis;
 }
 
-.video-info .tags {
+.video-info .onderwerpen {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 0.5rem;
 }
 
-.video-info .tag {
+.video-info .onderwerp {
     background-color: var(--secondary-color);
     color: white;
     padding: 0.25rem 0.5rem;
@@ -312,30 +332,7 @@ main {
     border: none;
 }
 
-/* List View Specific */
-.video-card.list-view {
-    display: flex;
-    gap: 1rem;
-}
 
-.video-card.list-view .video-thumbnail {
-    width: 120px;
-    height: 68px;
-    flex-shrink: 0;
-}
-
-.video-card.list-view .video-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.video-card.list-view .video-info h3 {
-    white-space: normal;
-    text-overflow: unset;
-    overflow: unset;
-}
 
 /* ===== No Results ===== */
 .no-results {
@@ -396,18 +393,119 @@ main {
     font-size: 1.25rem;
 }
 
-.modal-tags {
+.modal-onderwerpen {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin-top: 0.5rem;
 }
 
-.modal-tags .tag {
+.modal-onderwerpen .onderwerp {
     background-color: var(--secondary-color);
     color: white;
     padding: 0.25rem 0.5rem;
     border-radius: 20px;
     font-size: 0.75rem;
+}
+
+/* ===== Suggestions Section ===== */
+.modal-suggestions {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.modal-suggestions.hidden {
+    display: none;
+}
+
+.modal-suggestions h3 {
+    color: white;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+.suggestions-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.suggestion-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.suggestion-card:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    border-color: var(--secondary-color);
+}
+
+.suggestion-thumbnail {
+    position: relative;
+    aspect-ratio: 16/9;
+    background-color: #000;
+    overflow: hidden;
+}
+
+.suggestion-thumbnail video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.suggestion-thumbnail .play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-speed);
+}
+
+.suggestion-card:hover .suggestion-thumbnail .play-icon {
+    opacity: 1;
+}
+
+.suggestion-thumbnail .play-icon svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--secondary-color);
+}
+
+.suggestion-info {
+    padding: 0.75rem;
+}
+
+.suggestion-info h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suggestion-reason {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.25rem;
+    font-style: italic;
 }
 
 .close-btn {
@@ -526,8 +624,19 @@ main {
         min-width: 100%;
     }
     
-    .view-toggle {
-        justify-content: center;
+    .filter-container {
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) {
+    .controls {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .filter-container {
+        flex-direction: row;
     }
 }
 

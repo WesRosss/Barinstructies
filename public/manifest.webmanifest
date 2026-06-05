@@ -1,0 +1,29 @@
+{
+  "name": "Bar Instructies - TPV Uitwijk",
+  "short_name": "BarInstructies",
+  "description": "Instructievideo's voor barmedewerkers van Tennis- en padelvereniging Uitwijk",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#003399",
+  "theme_color": "#003399",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
