@@ -43,6 +43,8 @@ De server detecteert automatisch nieuwe video's bij herstart.
 |-----------|---------|--------------|
 | `PORT` | 3210 | Poort waar de server op draait |
 | `NODE_ENV` | production | Node.js omgeving |
+| `CDN_BASE_URL` | https://cdn.barinstructies.nl | Base URL voor de CDN |
+| `USE_CDN` | true | Gebruik CDN voor video's (true/false) |
 
 ### Docker Compose
 
@@ -78,6 +80,26 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
+```
+
+### CDN Configuratie
+
+Om Bunny.net CDN te gebruiken:
+
+1. Zet je video's en JSON metadata bestanden op Bunny.net
+2. Stel de omgevingsvariabelen in:
+   ```bash
+   CDN_BASE_URL=https://cdn.barinstructies.nl
+   USE_CDN=true
+   ```
+
+3. Herstart de server
+
+De website zal nu video's laden vanaf de CDN in plaats van lokaal.
+
+Om terug te schakelen naar lokale video's:
+```bash
+USE_CDN=false
 ```
 
 ## Functionaliteiten

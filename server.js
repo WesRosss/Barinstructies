@@ -6,6 +6,10 @@ const app = express();
 const PORT = process.env.PORT || 3210;
 const VIDEOS_DIR = path.join(__dirname, 'videos');
 
+// CDN Configuration
+const CDN_BASE_URL = process.env.CDN_BASE_URL || 'https://cdn.barinstructies.nl';
+const USE_CDN = process.env.USE_CDN === 'false' ? false : true;
+
 // Ensure videos directory exists
 if (!fs.existsSync(VIDEOS_DIR)) {
     fs.mkdirSync(VIDEOS_DIR, { recursive: true });
@@ -49,11 +53,15 @@ function getVideos() {
                     }
                 }
                 
+                // Use CDN URL if enabled, otherwise local path
+                const videoPath = USE_CDN ? `${CDN_BASE_URL}/${file}` : `/videos/${file}`;
+                const thumbnailPath = USE_CDN ? `${CDN_BASE_URL}/${baseName}.jpg` : `/videos/${baseName}.jpg`;
+                
                 videos.push({
                     filename: file,
                     basename: baseName,
-                    path: `/videos/${file}`,
-                    thumbnail: `/videos/${baseName}.jpg`, // Optional thumbnail
+                    path: videoPath,
+                    thumbnail: thumbnailPath,
                     size: stats.size,
                     modified: stats.mtime,
                     ...metadata
@@ -100,18 +108,34 @@ app.get('/api/tags', (req, res) => {
     }
 });
 
-// Serve videos directory
-app.use('/videos', express.static(VIDEOS_DIR));
+// Serve videos directory only if CDN is disabled
+if (!USE_CDN) {
+    app.use('/videos', express.static(VIDEOS_DIR));
+}
 
-// Serve the main page for all other routes
+// Inject CDN configuration into index.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    fs.readFile(path.join(__dirname, 'public', 'index.html'), 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).send('Error loading index.html');
+        }
+        
+        // Replace CDN configuration placeholders
+        const html = data
+            .replace('window.CDN_BASE_URL = \'https://cdn.barinstructies.nl\';', 
+                     `window.CDN_BASE_URL = '${CDN_BASE_URL}';`)
+            .replace('window.USE_CDN = true;', 
+                     `window.USE_CDN = ${USE_CDN};`);
+        
+        res.send(html);
+    });
 });
 
 // Start server
 app.listen(PORT, () => {
     console.log(`Barinstructies server running on port ${PORT}`);
     console.log(`Videos directory: ${VIDEOS_DIR}`);
+    console.log(`CDN enabled: ${USE_CDN}, Base URL: ${CDN_BASE_URL}`);
     
     // Log available videos at startup
     const videos = getVideos();

@@ -1,3 +1,7 @@
+// ===== Configuration =====
+const CDN_BASE_URL = window.CDN_BASE_URL || 'https://cdn.barinstructies.nl';
+const USE_CDN = window.USE_CDN !== false && window.USE_CDN !== 'false';
+
 // ===== State =====
 let videos = [];
 let allTags = [];

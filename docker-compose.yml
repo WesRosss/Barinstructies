@@ -11,3 +11,5 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3210
+      - CDN_BASE_URL=https://cdn.barinstructies.nl
+      - USE_CDN=true
