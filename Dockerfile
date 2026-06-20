@@ -1,6 +1,9 @@
 # Use Node.js LTS version
 FROM node:18-alpine
 
+# Install ffmpeg for thumbnail generation
+RUN apk add --no-cache ffmpeg
+
 # Set working directory
 WORKDIR /app
 

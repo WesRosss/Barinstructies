@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3210;
@@ -10,6 +11,11 @@ const VIDEOS_DIR = path.join(__dirname, 'videos');
 const CDN_BASE_URL = process.env.CDN_BASE_URL || 'https://cdn.barinstructies.nl';
 const USE_CDN = process.env.USE_CDN === 'false' ? false : true;
 
+// Thumbnail Configuration
+const GENERATE_THUMBNAILS = process.env.GENERATE_THUMBNAILS !== 'false';
+const THUMBNAIL_WIDTH = process.env.THUMBNAIL_WIDTH || 320;
+const THUMBNAIL_HEIGHT = process.env.THUMBNAIL_HEIGHT || 180;
+
 // Ensure videos directory exists
 if (!fs.existsSync(VIDEOS_DIR)) {
     fs.mkdirSync(VIDEOS_DIR, { recursive: true });
@@ -18,6 +24,31 @@ if (!fs.existsSync(VIDEOS_DIR)) {
 // Middleware for JSON parsing
 app.use(express.json());
 app.use(express.static('public'));
+
+// Function to generate thumbnail from video
+function generateThumbnail(videoPath, thumbnailPath) {
+    if (!GENERATE_THUMBNAILS) return false;
+    
+    try {
+        // Check if ffmpeg is available
+        execSync('ffmpeg -version', { stdio: 'ignore' });
+        
+        // Check if thumbnail already exists
+        if (fs.existsSync(thumbnailPath)) {
+            return true;
+        }
+        
+        // Generate thumbnail at 1 second into the video
+        execSync(`ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 -q:v 2 -y -s ${THUMBNAIL_WIDTH}x${THUMBNAIL_HEIGHT} "${thumbnailPath}"`, {
+            stdio: 'inherit'
+        });
+        
+        return fs.existsSync(thumbnailPath);
+    } catch (error) {
+        console.error(`Error generating thumbnail for ${videoPath}:`, error.message);
+        return false;
+    }
+}
 
 // Scan videos directory and return video list with metadata
 function getVideos() {
@@ -54,6 +85,15 @@ function getVideos() {
                     console.error(`Error reading metadata for ${file}:`, e.message);
                 }
                 
+                // Local paths
+                const localVideoPath = path.join(VIDEOS_DIR, videoFileName);
+                const localThumbnailPath = path.join(VIDEOS_DIR, baseName + '.jpg');
+                
+                // Try to generate thumbnail if local video exists and thumbnail doesn't
+                if (fs.existsSync(localVideoPath) && !fs.existsSync(localThumbnailPath)) {
+                    generateThumbnail(localVideoPath, localThumbnailPath);
+                }
+                
                 // Use CDN URL if enabled, otherwise local path
                 const publicVideoPath = USE_CDN ? `${CDN_BASE_URL}/${videoFileName}` : `/videos/${videoFileName}`;
                 const publicThumbnailPath = USE_CDN ? `${CDN_BASE_URL}/${baseName}.jpg` : `/videos/${baseName}.jpg`;
@@ -61,7 +101,6 @@ function getVideos() {
                 // Try to get file stats if local file exists
                 let size = 0;
                 let modified = new Date();
-                const localVideoPath = path.join(VIDEOS_DIR, videoFileName);
                 if (fs.existsSync(localVideoPath)) {
                     const stats = fs.statSync(localVideoPath);
                     size = stats.size;
@@ -82,12 +121,18 @@ function getVideos() {
             else if (ext === '.mp4') {
                 const jsonFile = path.join(VIDEOS_DIR, baseName + '.json');
                 const localVideoPath = path.join(VIDEOS_DIR, file);
+                const localThumbnailPath = path.join(VIDEOS_DIR, baseName + '.jpg');
                 
                 // Skip if we've already processed this video from its JSON file
                 if (processedFiles.has(file)) {
                     return;
                 }
                 processedFiles.add(file);
+                
+                // Try to generate thumbnail if it doesn't exist
+                if (!fs.existsSync(localThumbnailPath)) {
+                    generateThumbnail(localVideoPath, localThumbnailPath);
+                }
                 
                 // Get video stats
                 const stats = fs.statSync(localVideoPath);

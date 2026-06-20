@@ -45,6 +45,9 @@ De server detecteert automatisch nieuwe video's bij herstart.
 | `NODE_ENV` | production | Node.js omgeving |
 | `CDN_BASE_URL` | https://cdn.barinstructies.nl | Base URL voor de CDN |
 | `USE_CDN` | true | Gebruik CDN voor video's (true/false) |
+| `GENERATE_THUMBNAILS` | true | Genereer automatisch thumbnails (true/false) |
+| `THUMBNAIL_WIDTH` | 320 | Breedte van thumbnails in pixels |
+| `THUMBNAIL_HEIGHT` | 180 | Hoogte van thumbnails in pixels |
 
 ### Docker Compose
 
@@ -86,16 +89,36 @@ server {
 
 Om Bunny.net CDN te gebruiken:
 
-1. Zet je video's en JSON metadata bestanden op Bunny.net
-2. Stel de omgevingsvariabelen in:
+1. Zet je video's op Bunny.net (in de root of in een map)
+2. Houd je JSON metadata bestanden **lokaal** in de `videos/` directory
+3. Stel de omgevingsvariabelen in:
    ```bash
    CDN_BASE_URL=https://cdn.barinstructies.nl
    USE_CDN=true
    ```
 
-3. Herstart de server
+4. Herstart de server
 
-De website zal nu video's laden vanaf de CDN in plaats van lokaal.
+De website zal nu:
+- Metadata lokaal lezen uit de `videos/` directory
+- Video's laden vanaf de CDN
+- **Automatisch thumbnails genereren** (als `GENERATE_THUMBNAILS=true`)
+
+### Thumbnail Generatie
+
+De server genereert automatisch JPG thumbnails van je video's:
+- Thumbnails worden opgeslagen in de `videos/` directory naast de `.json` files
+- Formaat: `{videonaam}.jpg` (bijv. `VID_20260617_164247.jpg`)
+- Afmetingen: standaard 320x180px (aanpasbaar via `THUMBNAIL_WIDTH` en `THUMBNAIL_HEIGHT`)
+
+**Vereisten:**
+- `ffmpeg` moet geïnstalleerd zijn in de Docker container
+- Voor Docker: voeg `ffmpeg` toe aan je Dockerfile
+
+Om thumbnail generatie uit te schakelen:
+```bash
+GENERATE_THUMBNAILS=false
+```
 
 Om terug te schakelen naar lokale video's:
 ```bash

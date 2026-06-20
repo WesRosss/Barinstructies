@@ -13,3 +13,6 @@ services:
       - PORT=3210
       - CDN_BASE_URL=https://cdn.barinstructies.nl
       - USE_CDN=true
+      - GENERATE_THUMBNAILS=true
+      - THUMBNAIL_WIDTH=320
+      - THUMBNAIL_HEIGHT=180

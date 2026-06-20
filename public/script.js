@@ -112,7 +112,54 @@ function filterAndSearchVideos() {
     });
 }
 
+function createVideoCard(video) {
+    const card = document.createElement('div');
+    card.className = `video-card ${currentView}-view`;
+    card.dataset.filename = video.filename;
+    
+    // Thumbnail section
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'video-thumbnail';
+    
+    // Use video element as thumbnail (more reliable than poster)
+    const videoEl = document.createElement('video');
+    videoEl.src = video.path;
+    videoEl.muted = true;
+    videoEl.loop = true;
+    videoEl.playsInline = true;
+    videoEl.preload = 'metadata';
+    
+    // Add play icon overlay
+    const playIcon = document.createElement('div');
+    playIcon.className = 'play-icon';
+    playIcon.innerHTML = playIconSVG;
+    
+    thumbnail.appendChild(videoEl);
+    thumbnail.appendChild(playIcon);
+=======
 // ===== Create Video Card =====
+function createVideoCard(video) {
+    const card = document.createElement('div');
+    card.className = `video-card ${currentView}-view`;
+    card.dataset.filename = video.filename;
+    
+    // Thumbnail section
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'video-thumbnail';
+    
+    // Use static thumbnail image if available, otherwise fallback to video element
+    const thumbnailImg = document.createElement('img');
+    thumbnailImg.src = video.thumbnail;
+    thumbnailImg.alt = video.title || video.filename;
+    thumbnailImg.loading = 'lazy';
+    
+    // Add play icon overlay
+    const playIcon = document.createElement('div');
+    playIcon.className = 'play-icon';
+    playIcon.innerHTML = playIconSVG;
+    
+    thumbnail.appendChild(thumbnailImg);
+    thumbnail.appendChild(playIcon);=====
 function createVideoCard(video) {
     const card = document.createElement('div');
     card.className = `video-card ${currentView}-view`;
@@ -295,7 +342,62 @@ function setupEventListeners() {
     setupVideoThumbnailHover();
 }
 
+function setupVideoThumbnailHover() {
+    // Use Intersection Observer for better performance
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const videoEl = entry.target;
+            if (entry.isIntersecting) {
+                // Preload metadata when visible
+                videoEl.load();
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    // Observe all thumbnail videos
+    const thumbnailVideos = document.querySelectorAll('.video-thumbnail video');
+    thumbnailVideos.forEach(videoEl => {
+        observer.observe(videoEl);
+        
+        // Play on hover
+        videoEl.parentElement.addEventListener('mouseenter', () => {
+            videoEl.currentTime = 0;
+            videoEl.play().catch(() => {});
+        });
+        
+        // Pause on mouse leave
+        videoEl.parentElement.addEventListener('mouseleave', () => {
+            videoEl.pause();
+        });
+    });
+}
+=======
 // ===== Setup Video Thumbnail Hover =====
+function setupVideoThumbnailHover() {
+    // Use Intersection Observer for lazy loading images
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const imgEl = entry.target;
+            if (entry.isIntersecting) {
+                // Set the actual src when the image is in view
+                if (imgEl.dataset.src && !imgEl.src) {
+                    imgEl.src = imgEl.dataset.src;
+                }
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    // Observe all thumbnail images for lazy loading
+    const thumbnailImages = document.querySelectorAll('.video-thumbnail img');
+    thumbnailImages.forEach(imgEl => {
+        // Store the original src in data-src for lazy loading
+        if (imgEl.src && !imgEl.dataset.src) {
+            imgEl.dataset.src = imgEl.src;
+            imgEl.src = ''; // Clear src to prevent immediate loading
+        }
+        observer.observe(imgEl);
+    });
+}=====
 function setupVideoThumbnailHover() {
     // Use Intersection Observer for better performance
     const observer = new IntersectionObserver((entries) => {
