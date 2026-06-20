@@ -32,10 +32,10 @@ function getVideos() {
             // Check for .mp4 files
             if (ext === '.mp4') {
                 const jsonFile = path.join(VIDEOS_DIR, baseName + '.json');
-                const videoPath = path.join(VIDEOS_DIR, file);
+                const localVideoPath = path.join(VIDEOS_DIR, file);
                 
                 // Get video stats
-                const stats = fs.statSync(videoPath);
+                const stats = fs.statSync(localVideoPath);
                 
                 // Try to read metadata
                 let metadata = {
@@ -54,14 +54,14 @@ function getVideos() {
                 }
                 
                 // Use CDN URL if enabled, otherwise local path
-                const videoPath = USE_CDN ? `${CDN_BASE_URL}/${file}` : `/videos/${file}`;
-                const thumbnailPath = USE_CDN ? `${CDN_BASE_URL}/${baseName}.jpg` : `/videos/${baseName}.jpg`;
+                const publicVideoPath = USE_CDN ? `${CDN_BASE_URL}/${file}` : `/videos/${file}`;
+                const publicThumbnailPath = USE_CDN ? `${CDN_BASE_URL}/${baseName}.jpg` : `/videos/${baseName}.jpg`;
                 
                 videos.push({
                     filename: file,
                     basename: baseName,
-                    path: videoPath,
-                    thumbnail: thumbnailPath,
+                    path: publicVideoPath,
+                    thumbnail: publicThumbnailPath,
                     size: stats.size,
                     modified: stats.mtime,
                     ...metadata
