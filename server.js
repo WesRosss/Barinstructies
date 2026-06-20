@@ -24,15 +24,70 @@ function getVideos() {
     try {
         const files = fs.readdirSync(VIDEOS_DIR);
         const videos = [];
+        const processedFiles = new Set(); // To avoid duplicates
         
         files.forEach(file => {
             const ext = path.extname(file).toLowerCase();
             const baseName = path.basename(file, ext);
             
-            // Check for .mp4 files
-            if (ext === '.mp4') {
+            // Check for .json files (metadata) - primary method when using CDN
+            if (ext === '.json') {
+                const videoFileName = baseName + '.mp4';
+                
+                // Skip if we've already processed this video
+                if (processedFiles.has(videoFileName)) {
+                    return;
+                }
+                processedFiles.add(videoFileName);
+                
+                // Try to read metadata from JSON file
+                let metadata = {
+                    title: baseName.replace(/-/g, ' ').replace(/_/g, ' '),
+                    tags: []
+                };
+                
+                try {
+                    const jsonData = fs.readFileSync(path.join(VIDEOS_DIR, file), 'utf8');
+                    const jsonMetadata = JSON.parse(jsonData);
+                    metadata = { ...metadata, ...jsonMetadata };
+                } catch (e) {
+                    console.error(`Error reading metadata for ${file}:`, e.message);
+                }
+                
+                // Use CDN URL if enabled, otherwise local path
+                const publicVideoPath = USE_CDN ? `${CDN_BASE_URL}/${videoFileName}` : `/videos/${videoFileName}`;
+                const publicThumbnailPath = USE_CDN ? `${CDN_BASE_URL}/${baseName}.jpg` : `/videos/${baseName}.jpg`;
+                
+                // Try to get file stats if local file exists
+                let size = 0;
+                let modified = new Date();
+                const localVideoPath = path.join(VIDEOS_DIR, videoFileName);
+                if (fs.existsSync(localVideoPath)) {
+                    const stats = fs.statSync(localVideoPath);
+                    size = stats.size;
+                    modified = stats.mtime;
+                }
+                
+                videos.push({
+                    filename: videoFileName,
+                    basename: baseName,
+                    path: publicVideoPath,
+                    thumbnail: publicThumbnailPath,
+                    size: size,
+                    modified: modified,
+                    ...metadata
+                });
+            }
+            // Also check for .mp4 files (for backward compatibility)
+            else if (ext === '.mp4') {
                 const jsonFile = path.join(VIDEOS_DIR, baseName + '.json');
                 const localVideoPath = path.join(VIDEOS_DIR, file);
+                
+                // Skip if we've already processed this video from its JSON file
+                if (processedFiles.has(file)) {
+                    return;
+                }
+                processedFiles.add(file);
                 
                 // Get video stats
                 const stats = fs.statSync(localVideoPath);
