@@ -94,9 +94,9 @@ function getVideos() {
                     generateThumbnail(localVideoPath, localThumbnailPath);
                 }
                 
-                // Use CDN URL if enabled, otherwise local path
+                // Use CDN URL for videos if enabled, but always use local path for thumbnails
                 const publicVideoPath = USE_CDN ? `${CDN_BASE_URL}/${videoFileName}` : `/videos/${videoFileName}`;
-                const publicThumbnailPath = USE_CDN ? `${CDN_BASE_URL}/${baseName}.jpg` : `/videos/${baseName}.jpg`;
+                const publicThumbnailPath = `/videos/${baseName}.jpg`;
                 
                 // Try to get file stats if local file exists
                 let size = 0;
@@ -153,9 +153,9 @@ function getVideos() {
                     }
                 }
                 
-                // Use CDN URL if enabled, otherwise local path
+                // Use CDN URL for videos if enabled, but always use local path for thumbnails
                 const publicVideoPath = USE_CDN ? `${CDN_BASE_URL}/${file}` : `/videos/${file}`;
-                const publicThumbnailPath = USE_CDN ? `${CDN_BASE_URL}/${baseName}.jpg` : `/videos/${baseName}.jpg`;
+                const publicThumbnailPath = `/videos/${baseName}.jpg`;
                 
                 videos.push({
                     filename: file,
