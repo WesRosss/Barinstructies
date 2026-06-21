@@ -169,34 +169,122 @@ function checkThumbnailOnCDN(thumbnailFilename) {
     });
 }
 
-// Function to generate and upload thumbnail for a video
+// Function to compress a video file with FFmpeg
+function compressVideo(inputPath, outputPath, maxWidth = 640, maxHeight = 480, bitrate = '500k') {
+    return new Promise((resolve) => {
+        try {
+            // Check if ffmpeg is available
+            execSync('ffmpeg -version', { stdio: 'ignore' });
+
+            console.log(`Compressing ${inputPath} to ${outputPath}...`);
+
+            // FFmpeg command for mobile-optimized compression
+            const command = `ffmpeg -i "${inputPath}" ` +
+                `-vf "scale=${maxWidth}:${maxHeight}:force_original_aspect_ratio=decrease" ` +
+                `-b:v ${bitrate} ` +
+                `-c:v libx264 ` +
+                `-crf 28 ` +
+                `-preset fast ` +
+                `-c:a aac ` +
+                `-b:a 96k ` +
+                `-movflags +faststart ` +
+                `-y "${outputPath}"`;
+
+            execSync(command, { stdio: 'inherit' });
+
+            if (fs.existsSync(outputPath)) {
+                console.log(`Successfully compressed ${inputPath} to ${outputPath}`);
+                resolve(true);
+            } else {
+                console.error(`Compression failed for ${inputPath}`);
+                resolve(false);
+            }
+        } catch (error) {
+            console.error(`Error compressing ${inputPath}:`, error.message);
+            resolve(false);
+        }
+    });
+}
+
+// Function to generate, compress (if needed), and upload thumbnail for a video
 async function ensureThumbnailOnCDN(videoFilename, baseName) {
     if (!GENERATE_THUMBNAILS || !UPLOAD_THUMBNAILS_TO_CDN) {
         console.log(`Thumbnail generation/upload skipped: GENERATE_THUMBNAILS=${GENERATE_THUMBNAILS}, UPLOAD_THUMBNAILS_TO_CDN=${UPLOAD_THUMBNAILS_TO_CDN}`);
         return false;
     }
-    
+
     const thumbnailFilename = baseName + '.jpg';
     const cdnVideoUrl = `${CDN_BASE_URL}/${videoFilename}`;
     const tempVideoPath = path.join(TEMP_DIR, videoFilename);
     const tempThumbnailPath = path.join(TEMP_DIR, thumbnailFilename);
-    
+    const tempCompressedPath = path.join(TEMP_DIR, `compressed_${videoFilename}`);
+
     try {
         // Check if thumbnail already exists on CDN
         const thumbnailExists = await checkThumbnailOnCDN(thumbnailFilename);
         if (thumbnailExists) {
             return true;
         }
-        
+
         console.log(`Thumbnail ${thumbnailFilename} not found on CDN, generating...`);
-        
+
         // Download video from CDN to temp directory
         const downloaded = await downloadFile(cdnVideoUrl, tempVideoPath);
         if (!downloaded) {
             console.error(`Failed to download video ${videoFilename} from CDN`);
             return false;
         }
-        
+
+        // Check file size (compress if >5MB)
+        const fileStats = fs.statSync(tempVideoPath);
+        const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+        let videoToUseForThumbnail = tempVideoPath;
+
+        if (fileStats.size > MAX_SIZE_BYTES) {
+            console.log(`Video ${videoFilename} is too large (${fileStats.size} bytes), compressing...`);
+
+            // Compress the video
+            const compressed = await compressVideo(
+                tempVideoPath,
+                tempCompressedPath,
+                640,  // maxWidth
+                480,  // maxHeight
+                '500k' // bitrate
+            );
+
+            if (compressed) {
+                // Upload compressed video to CDN (overwrite original)
+                const compressedUploaded = await uploadToBunnyCDN(
+                    tempCompressedPath,
+                    videoFilename
+                );
+
+                if (compressedUploaded) {
+                    console.log(`Compressed video uploaded to CDN as ${videoFilename}`);
+
+                    // Rename original on CDN to *_origineel.mp4
+                    const originalFilename = baseName + '_origineel.mp4';
+                    const originalUploaded = await uploadToBunnyCDN(
+                        tempVideoPath,
+                        originalFilename
+                    );
+
+                    if (originalUploaded) {
+                        console.log(`Original video renamed to ${originalFilename} on CDN`);
+                    } else {
+                        console.error(`Failed to upload original video as ${originalFilename} to CDN`);
+                    }
+
+                    // Use compressed video for thumbnail generation
+                    videoToUseForThumbnail = tempCompressedPath;
+                } else {
+                    console.error(`Failed to upload compressed video to CDN`);
+                }
+            } else {
+                console.error(`Failed to compress video ${videoFilename}`);
+            }
+        }
+
         // Check if ffmpeg is available
         try {
             execSync('ffmpeg -version', { stdio: 'ignore' });
@@ -204,27 +292,28 @@ async function ensureThumbnailOnCDN(videoFilename, baseName) {
             console.error('ffmpeg not available for thumbnail generation');
             return false;
         }
-        
-        // Generate thumbnail from downloaded video
+
+        // Generate thumbnail from the (possibly compressed) video
         console.log(`Generating thumbnail for ${videoFilename}...`);
-        execSync(`ffmpeg -i "${tempVideoPath}" -ss 00:00:01 -vframes 1 -q:v 2 -y -s ${THUMBNAIL_WIDTH}x${THUMBNAIL_HEIGHT} "${tempThumbnailPath}"`, {
+        execSync(`ffmpeg -i "${videoToUseForThumbnail}" -ss 00:00:01 -vframes 1 -q:v 2 -y -s ${THUMBNAIL_WIDTH}x${THUMBNAIL_HEIGHT} "${tempThumbnailPath}"`, {
             stdio: 'inherit'
         });
-        
+
         if (!fs.existsSync(tempThumbnailPath)) {
             console.error(`Thumbnail generation failed for ${videoFilename}`);
             return false;
         }
-        
+
         console.log(`Thumbnail generated: ${tempThumbnailPath}`);
-        
+
         // Upload thumbnail to CDN
         const uploaded = await uploadToBunnyCDN(tempThumbnailPath, thumbnailFilename);
-        
+
         // Clean up temp files
         fs.unlink(tempVideoPath, () => {});
+        fs.unlink(tempCompressedPath, () => {});
         fs.unlink(tempThumbnailPath, () => {});
-        
+
         if (uploaded) {
             console.log(`Thumbnail ${thumbnailFilename} successfully uploaded to CDN`);
             return true;
@@ -236,6 +325,7 @@ async function ensureThumbnailOnCDN(videoFilename, baseName) {
         console.error(`Error in ensureThumbnailOnCDN for ${videoFilename}:`, error.message);
         // Clean up temp files if they exist
         fs.unlink(tempVideoPath, () => {});
+        fs.unlink(tempCompressedPath, () => {});
         fs.unlink(tempThumbnailPath, () => {});
         return false;
     }
@@ -252,6 +342,11 @@ async function getVideos() {
         for (const file of files) {
             const ext = path.extname(file).toLowerCase();
             const baseName = path.basename(file, ext);
+            
+            // Sla _origineel.mp4 bestanden over
+            if (ext === '.mp4' && file.endsWith('_origineel.mp4')) {
+                continue;
+            }
             
             // Check for .json files (metadata) - primary method when using CDN
             if (ext === '.json') {
@@ -323,6 +418,11 @@ async function getVideos() {
             }
             // Also check for .mp4 files (for backward compatibility)
             else if (ext === '.mp4') {
+                // Sla _origineel.mp4 bestanden over
+                if (file.endsWith('_origineel.mp4')) {
+                    continue;
+                }
+                
                 const jsonFile = path.join(VIDEOS_DIR, baseName + '.json');
                 const localVideoPath = path.join(VIDEOS_DIR, file);
                 
