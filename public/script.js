@@ -39,9 +39,6 @@ function showLoading(total) {
     totalVideos = total;
     videosWithThumbnails = 0;
     loadingIndicator.classList.remove('hidden');
-    videosContainer.classList.add('hidden');
-    noResultsEl.classList.add('hidden');
-    videoCountEl.classList.add('hidden');
     totalCountEl.textContent = total;
     progressCountEl.textContent = '0';
     const estimatedMinutes = Math.ceil((total * THUMBNAIL_GENERATION_TIME_PER_VIDEO) / 60);
@@ -54,8 +51,6 @@ function hideLoading() {
         checkInterval = null;
     }
     loadingIndicator.classList.add('hidden');
-    videosContainer.classList.remove('hidden');
-    videoCountEl.classList.remove('hidden');
 }
 
 function updateLoadingProgress() {
