@@ -8,6 +8,8 @@ services:
       # Mount the videos directory from host to container
       - ./videos:/app/videos
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3210
@@ -17,8 +19,3 @@ services:
       - HAS_LOCAL_VIDEOS=false
       - THUMBNAIL_WIDTH=320
       - THUMBNAIL_HEIGHT=180
-      # BunnyCDN credentials for thumbnail uploads (set in .env file or here)
-      # - BUNNYCDN_ACCESS_KEY=your_access_key
-      # - BUNNYCDN_PASSWORD=your_password
-      # - BUNNYCDN_STORAGE_ZONE=instructievideos
-      # - BUNNYCDN_REGION_ENDPOINT=https://storage.bunnycdn.com
