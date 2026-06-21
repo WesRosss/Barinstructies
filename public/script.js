@@ -9,20 +9,6 @@ let currentView = 'grid';
 let currentSearch = '';
 let currentFilter = '';
 
-const videosContainer = document.getElementById('videos-container');
-const searchInput = document.getElementById('search');
-const searchClearBtn = document.getElementById('search-clear');
-const tagFilterSelect = document.getElementById('tag-filter');
-const gridViewBtn = document.getElementById('grid-view');
-const listViewBtn = document.getElementById('list-view');
-const videoCountEl = document.getElementById('video-count');
-const noResultsEl = document.getElementById('no-results');
-const modal = document.getElementById('video-modal');
-const modalVideo = document.getElementById('modal-video');
-const modalTitle = document.getElementById('modal-title');
-const modalTags = document.getElementById('modal-tags');
-const modalClose = document.getElementById('modal-close');
-=======
 // ===== DOM Elements =====
 const videosContainer = document.getElementById('videos-container');
 const searchInput = document.getElementById('search');
@@ -40,70 +26,24 @@ const modalClose = document.getElementById('modal-close');
 const loadingIndicator = document.getElementById('loading-indicator');
 const progressCountEl = document.getElementById('progress-count');
 const totalCountEl = document.getElementById('total-count');
-const estimatedTimeEl = document.getElementById('estimated-time');=====
-const videosContainer = document.getElementById('videos-container');
-const searchInput = document.getElementById('search');
-const searchClearBtn = document.getElementById('search-clear');
-const tagFilterSelect = document.getElementById('tag-filter');
-const gridViewBtn = document.getElementById('grid-view');
-const listViewBtn = document.getElementById('list-view');
-const videoCountEl = document.getElementById('video-count');
-const noResultsEl = document.getElementById('no-results');
-const modal = document.getElementById('video-modal');
-const modalVideo = document.getElementById('modal-video');
-const modalTitle = document.getElementById('modal-title');
-const modalTags = document.getElementById('modal-tags');
-const modalClose = document.getElementById('modal-close');
-
-const playIconSVG = `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M8 5v14l11-7z"/>
-</svg>`;
-
-// ===== Initialize =====
-async function init() {
-    try {
-        // Fetch videos and tags in parallel
-        const [videosResponse, tagsResponse] = await Promise.all([
-            fetch('/api/videos'),
-            fetch('/api/tags')
-        ]);
-        
-        videos = await videosResponse.json();
-        allTags = await tagsResponse.json();
-        
-        // Populate tag filter
-        populateTagFilter();
-        
-        // Render videos
-        renderVideos();
-        
-        // Setup event listeners
-=======
-// ===== Play Icon SVG =====
-const playIconSVG = `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M8 5v14l11-7z"/>
-</svg>`;
+const estimatedTimeEl = document.getElementById('estimated-time');
 
 // ===== Loading State =====
 let videosWithThumbnails = 0;
 let totalVideos = 0;
-const THUMBNAIL_GENERATION_TIME_PER_VIDEO = 15; // seconds per video (download + generate + upload)
+const THUMBNAIL_GENERATION_TIME_PER_VIDEO = 15;
 let checkInterval = null;
 
 // ===== Loading Functions =====
 function showLoading(total) {
     totalVideos = total;
     videosWithThumbnails = 0;
-    
     loadingIndicator.classList.remove('hidden');
     videosContainer.classList.add('hidden');
     noResultsEl.classList.add('hidden');
     videoCountEl.classList.add('hidden');
-    
     totalCountEl.textContent = total;
     progressCountEl.textContent = '0';
-    
-    // Calculate estimated time
     const estimatedMinutes = Math.ceil((total * THUMBNAIL_GENERATION_TIME_PER_VIDEO) / 60);
     estimatedTimeEl.textContent = `${estimatedMinutes} ${estimatedMinutes === 1 ? 'minuut' : 'minuten'}`;
 }
@@ -120,8 +60,6 @@ function hideLoading() {
 
 function updateLoadingProgress() {
     progressCountEl.textContent = videosWithThumbnails;
-    
-    // Update estimated time based on actual progress
     if (videosWithThumbnails > 0) {
         const remaining = totalVideos - videosWithThumbnails;
         const estimatedSeconds = remaining * THUMBNAIL_GENERATION_TIME_PER_VIDEO;
@@ -130,28 +68,13 @@ function updateLoadingProgress() {
     }
 }
 
-// Function to check if a video has a valid thumbnail
-function hasValidThumbnail(video) {
-    if (!video.thumbnail) return false;
-    if (video.thumbnail.startsWith('http') && video.thumbnail.includes('.jpg')) {
-        return true;
-    }
-    return false;
-}
-
-// Function to check thumbnails status periodically
 function startThumbnailCheck() {
-    if (checkInterval) {
-        clearInterval(checkInterval);
-    }
-    
+    if (checkInterval) clearInterval(checkInterval);
     checkInterval = setInterval(async () => {
         try {
             const response = await fetch('/api/videos');
             const currentVideos = await response.json();
-            
-            const currentCount = currentVideos.filter(hasValidThumbnail).length;
-            
+            const currentCount = currentVideos.filter(v => v.hasThumbnail).length;
             if (currentCount > videosWithThumbnails) {
                 videosWithThumbnails = currentCount;
                 videos = currentVideos;
@@ -159,16 +82,17 @@ function startThumbnailCheck() {
                 renderVideos();
                 populateTagFilter();
             }
-            
-            // If all thumbnails are ready, hide loading
-            if (videosWithThumbnails >= totalVideos) {
-                hideLoading();
-            }
+            if (videosWithThumbnails >= totalVideos) hideLoading();
         } catch (error) {
             console.error('Error checking thumbnail status:', error);
         }
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 }
+
+// ===== Play Icon SVG =====
+const playIconSVG = `<svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M8 5v14l11-7z"/>
+</svg>`;
 
 // ===== Initialize =====
 async function init() {
@@ -187,7 +111,7 @@ async function init() {
         totalCountEl.textContent = totalVideos;
         
         // Count how many videos already have thumbnails
-        videosWithThumbnails = videos.filter(hasValidThumbnail).length;
+        videosWithThumbnails = videos.filter(v => v.hasThumbnail).length;
         updateLoadingProgress();
         
         // If not all videos have thumbnails, show loading and start checking
@@ -195,29 +119,6 @@ async function init() {
             showLoading(totalVideos);
             startThumbnailCheck();
         }
-        
-        // Populate tag filter
-        populateTagFilter();
-        
-        // Render videos
-        renderVideos();
-        
-        // Setup event listeners=====
-const playIconSVG = `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M8 5v14l11-7z"/>
-</svg>`;
-
-// ===== Initialize =====
-async function init() {
-    try {
-        // Fetch videos and tags in parallel
-        const [videosResponse, tagsResponse] = await Promise.all([
-            fetch('/api/videos'),
-            fetch('/api/tags')
-        ]);
-        
-        videos = await videosResponse.json();
-        allTags = await tagsResponse.json();
         
         // Populate tag filter
         populateTagFilter();
