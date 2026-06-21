@@ -197,18 +197,20 @@ function createVideoCard(video) {
     const thumbnail = document.createElement('div');
     thumbnail.className = 'video-thumbnail';
     
-    // Use static thumbnail image
-    const thumbnailImg = document.createElement('img');
-    thumbnailImg.src = video.hasThumbnail ? video.thumbnail : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"%3E%3Crect width="320" height="180" fill="%23ddd"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23999"%3EGeen thumbnail%3C/text%3E%3C/svg%3E';
-    thumbnailImg.alt = video.title || video.filename;
-    thumbnailImg.loading = 'lazy';
+    // Use video element as thumbnail (more reliable than poster)
+    const videoEl = document.createElement('video');
+    videoEl.src = video.path;
+    videoEl.muted = true;
+    videoEl.loop = true;
+    videoEl.playsInline = true;
+    videoEl.preload = 'metadata';
     
     // Add play icon overlay
     const playIcon = document.createElement('div');
     playIcon.className = 'play-icon';
     playIcon.innerHTML = playIconSVG;
     
-    thumbnail.appendChild(thumbnailImg);
+    thumbnail.appendChild(videoEl);
     thumbnail.appendChild(playIcon);
     
     // Info section
@@ -366,6 +368,35 @@ function setupEventListeners() {
     modal.addEventListener('click', pauseAllThumbnails);
 }
 
+function setupVideoThumbnailHover() {
+    // Use Intersection Observer for better performance
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const videoEl = entry.target;
+            if (entry.isIntersecting) {
+                // Preload metadata when visible
+                videoEl.load();
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    // Observe all thumbnail videos
+    const thumbnailVideos = document.querySelectorAll('.video-thumbnail video');
+    thumbnailVideos.forEach(videoEl => {
+        observer.observe(videoEl);
+        
+        // Play on hover
+        videoEl.parentElement.addEventListener('mouseenter', () => {
+            videoEl.currentTime = 0;
+            videoEl.play().catch(() => {});
+        });
+        
+        // Pause on mouse leave
+        videoEl.parentElement.addEventListener('mouseleave', () => {
+            videoEl.pause();
+        });
+    });
+}
 // ===== Setup Video Thumbnail Hover =====
 function setupVideoThumbnailHover() {
     // Use Intersection Observer for lazy loading images
@@ -380,6 +411,18 @@ function setupVideoThumbnailHover() {
     }, {
         rootMargin: '100px'
     });
+}
+function setupVideoThumbnailHover() {
+    // Use Intersection Observer for better performance
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const videoEl = entry.target;
+            if (entry.isIntersecting) {
+                // Preload metadata when visible
+                videoEl.load();
+            }
+        });
+    }, { threshold: 0.1 });
     
     document.querySelectorAll('.video-thumbnail img').forEach(img => {
         observer.observe(img);
