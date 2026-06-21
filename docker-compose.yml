@@ -14,5 +14,11 @@ services:
       - CDN_BASE_URL=https://cdn.barinstructies.nl
       - USE_CDN=true
       - GENERATE_THUMBNAILS=true
+      - HAS_LOCAL_VIDEOS=false
       - THUMBNAIL_WIDTH=320
       - THUMBNAIL_HEIGHT=180
+      # BunnyCDN credentials for thumbnail uploads (set in .env file or here)
+      # - BUNNYCDN_ACCESS_KEY=your_access_key
+      # - BUNNYCDN_PASSWORD=your_password
+      # - BUNNYCDN_STORAGE_ZONE=instructievideos
+      # - BUNNYCDN_REGION_ENDPOINT=https://storage.bunnycdn.com

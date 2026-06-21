@@ -53,6 +53,15 @@
     </header>
     
     <main>
+        <div id="loading-indicator" class="loading-indicator hidden">
+            <div class="loading-spinner"></div>
+            <div class="loading-content">
+                <h2>Thumbnails worden gegenereerd</h2>
+                <p>De server is bezig met het genereren en uploaden van thumbnails naar de CDN.</p>
+                <p class="loading-progress">Voortgang: <span id="progress-count">0</span> van <span id="total-count">0</span> video's</p>
+                <p class="loading-time">Geschatte wachttijd: <span id="estimated-time">2-3 minuten</span></p>
+            </div>
+        </div>
         <div id="video-count" class="video-count"></div>
         <div id="videos-container" class="videos-container grid-view"></div>
         <div id="no-results" class="no-results hidden">
