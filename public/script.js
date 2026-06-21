@@ -188,8 +188,9 @@ function filterAndSearchVideos() {
 
 // ===== Create Video Card =====
 function createVideoCard(video) {
-    const card = document.createElement('div');
+    const card = document.createElement('a');
     card.className = `video-card ${currentView}-view`;
+    card.href = video.path;
     card.dataset.filename = video.filename;
     
     // Thumbnail section
@@ -239,7 +240,12 @@ function createVideoCard(video) {
     card.appendChild(info);
     
     // Click handler
-    card.addEventListener('click', () => openModal(video));
+    card.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (video.hasThumbnail) {
+            openModal(video);
+        }
+    });
     
     return card;
 }
@@ -249,10 +255,8 @@ function openModal(video) {
     modalVideo.src = video.path;
     modalTitle.textContent = video.title || video.filename;
     
-    // Clear previous tags
+    // Update tags
     modalTags.innerHTML = '';
-    
-    // Add tags
     if (video.tags && video.tags.length > 0) {
         video.tags.forEach(tag => {
             const tagEl = document.createElement('span');
@@ -263,17 +267,15 @@ function openModal(video) {
     }
     
     modal.classList.remove('hidden');
-    modalVideo.focus();
-    
-    // Pause all other video thumbnails
-    pauseAllThumbnails();
+    modalVideo.currentTime = 0;
+    modalVideo.play().catch(e => console.log('Autoplay prevented:', e));
 }
 
 // ===== Close Modal =====
 function closeModal() {
     modal.classList.add('hidden');
     modalVideo.pause();
-    modalVideo.currentTime = 0;
+    modalVideo.src = '';
 }
 
 // ===== Pause All Thumbnails =====
@@ -281,7 +283,6 @@ function pauseAllThumbnails() {
     const videoElements = document.querySelectorAll('.video-thumbnail video');
     videoElements.forEach(videoEl => {
         videoEl.pause();
-        videoEl.currentTime = 0;
     });
 }
 
@@ -311,33 +312,37 @@ function updateVideoCount() {
     const filteredCount = filterAndSearchVideos().length;
     const totalCount = videos.length;
     
-    if (filteredCount === totalCount) {
-        videoCountEl.textContent = `${totalCount} video's`;
+    if (filteredCount === 0) {
+        videoCountEl.textContent = 'Geen video\'s gevonden';
+    } else if (filteredCount === totalCount) {
+        videoCountEl.textContent = `${totalCount} video\'s`;
     } else {
-        videoCountEl.textContent = `${filteredCount} van ${totalCount} video's`;
+        videoCountEl.textContent = `${filteredCount} van ${totalCount} video\'s`;
     }
 }
 
 // ===== Setup Event Listeners =====
 function setupEventListeners() {
     // Search
-    searchInput.addEventListener('input', (e) => {
-        currentSearch = e.target.value;
+    searchInput.addEventListener('input', () => {
+        currentSearch = searchInput.value;
         renderVideos();
+        updateVideoCount();
     });
     
-    // Clear search
+    // Search clear
     searchClearBtn.addEventListener('click', () => {
         searchInput.value = '';
         currentSearch = '';
         renderVideos();
-        searchInput.focus();
+        updateVideoCount();
     });
     
     // Tag filter
-    tagFilterSelect.addEventListener('change', (e) => {
-        currentFilter = e.target.value;
+    tagFilterSelect.addEventListener('change', () => {
+        currentFilter = tagFilterSelect.value;
         renderVideos();
+        updateVideoCount();
     });
     
     // View toggle
@@ -359,14 +364,8 @@ function setupEventListeners() {
         }
     });
     
-    // Load saved view preference
-    const savedView = localStorage.getItem('videoView') || 'grid';
-    if (savedView !== currentView) {
-        toggleView(savedView);
-    }
-    
-    // Handle video thumbnail hover
-    setupVideoThumbnailHover();
+    // Pause thumbnails when modal opens
+    modal.addEventListener('click', pauseAllThumbnails);
 }
 
 function setupVideoThumbnailHover() {
@@ -405,23 +404,12 @@ function setupVideoThumbnailHover() {
         entries.forEach(entry => {
             const imgEl = entry.target;
             if (entry.isIntersecting) {
-                // Set the actual src when the image is in view
-                if (imgEl.dataset.src && !imgEl.src) {
-                    imgEl.src = imgEl.dataset.src;
-                }
+                imgEl.src = imgEl.dataset.src || imgEl.src;
+                observer.unobserve(imgEl);
             }
         });
-    }, { threshold: 0.1 });
-    
-    // Observe all thumbnail images for lazy loading
-    const thumbnailImages = document.querySelectorAll('.video-thumbnail img');
-    thumbnailImages.forEach(imgEl => {
-        // Store the original src in data-src for lazy loading
-        if (imgEl.src && !imgEl.dataset.src) {
-            imgEl.dataset.src = imgEl.src;
-            imgEl.src = ''; // Clear src to prevent immediate loading
-        }
-        observer.observe(imgEl);
+    }, {
+        rootMargin: '100px'
     });
 }
 function setupVideoThumbnailHover() {
@@ -436,32 +424,18 @@ function setupVideoThumbnailHover() {
         });
     }, { threshold: 0.1 });
     
-    // Observe all thumbnail videos
-    const thumbnailVideos = document.querySelectorAll('.video-thumbnail video');
-    thumbnailVideos.forEach(videoEl => {
-        observer.observe(videoEl);
-        
-        // Play on hover
-        videoEl.parentElement.addEventListener('mouseenter', () => {
-            videoEl.currentTime = 0;
-            videoEl.play().catch(() => {});
-        });
-        
-        // Pause on mouse leave
-        videoEl.parentElement.addEventListener('mouseleave', () => {
-            videoEl.pause();
-        });
+    document.querySelectorAll('.video-thumbnail img').forEach(img => {
+        observer.observe(img);
     });
 }
 
 // ===== Show Error =====
 function showError(message) {
-    videosContainer.innerHTML = `
-        <div class="error">
-            <p>${message}</p>
-            <button onclick="location.reload()">Opnieuw proberen</button>
-        </div>
-    `;
+    const errorEl = document.createElement('div');
+    errorEl.className = 'error-message';
+    errorEl.textContent = message;
+    videosContainer.innerHTML = '';
+    videosContainer.appendChild(errorEl);
 }
 
 // ===== Refresh Videos =====
