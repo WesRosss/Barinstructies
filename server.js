@@ -277,9 +277,21 @@ async function getVideos() {
                     console.error(`Error reading metadata for ${file}:`, e.message);
                 }
                 
-                // Ensure thumbnail exists on CDN
-                if (USE_CDN && GENERATE_THUMBNAILS) {
-                    await ensureThumbnailOnCDN(videoFileName, baseName);
+                // Check if thumbnail exists on CDN
+                let hasThumbnail = false;
+                if (USE_CDN) {
+                    hasThumbnail = await checkThumbnailOnCDN(baseName + '.jpg');
+                    
+                    // If thumbnail doesn't exist, try to generate and upload it
+                    if (!hasThumbnail && GENERATE_THUMBNAILS && UPLOAD_THUMBNAILS_TO_CDN) {
+                        await ensureThumbnailOnCDN(videoFileName, baseName);
+                        // Check again after generation
+                        hasThumbnail = await checkThumbnailOnCDN(baseName + '.jpg');
+                    }
+                } else {
+                    // For local mode, check if thumbnail file exists
+                    const localThumbnailPath = path.join(VIDEOS_DIR, baseName + '.jpg');
+                    hasThumbnail = fs.existsSync(localThumbnailPath);
                 }
                 
                 // Use CDN URL for videos and thumbnails
@@ -303,6 +315,7 @@ async function getVideos() {
                     basename: baseName,
                     path: publicVideoPath,
                     thumbnail: publicThumbnailPath,
+                    hasThumbnail: hasThumbnail,
                     size: size,
                     modified: modified,
                     ...metadata
@@ -319,9 +332,21 @@ async function getVideos() {
                 }
                 processedFiles.add(file);
                 
-                // Ensure thumbnail exists on CDN
-                if (USE_CDN && GENERATE_THUMBNAILS) {
-                    await ensureThumbnailOnCDN(file, baseName);
+                // Check if thumbnail exists on CDN
+                let hasThumbnail = false;
+                if (USE_CDN) {
+                    hasThumbnail = await checkThumbnailOnCDN(baseName + '.jpg');
+                    
+                    // If thumbnail doesn't exist, try to generate and upload it
+                    if (!hasThumbnail && GENERATE_THUMBNAILS && UPLOAD_THUMBNAILS_TO_CDN) {
+                        await ensureThumbnailOnCDN(file, baseName);
+                        // Check again after generation
+                        hasThumbnail = await checkThumbnailOnCDN(baseName + '.jpg');
+                    }
+                } else {
+                    // For local mode, check if thumbnail file exists
+                    const localThumbnailPath = path.join(VIDEOS_DIR, baseName + '.jpg');
+                    hasThumbnail = fs.existsSync(localThumbnailPath);
                 }
                 
                 // Get video stats
@@ -352,6 +377,7 @@ async function getVideos() {
                     basename: baseName,
                     path: publicVideoPath,
                     thumbnail: publicThumbnailPath,
+                    hasThumbnail: hasThumbnail,
                     size: stats.size,
                     modified: stats.mtime,
                     ...metadata
