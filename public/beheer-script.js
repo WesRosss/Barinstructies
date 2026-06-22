@@ -951,7 +951,19 @@ function setupEventListeners() {
             e.preventDefault();
             const section = link.getAttribute('href').substring(1);
             switchSection(section);
+            // Update URL hash
+            window.location.hash = section;
         });
+    });
+    
+    // Hash-based navigation
+    window.addEventListener('hashchange', () => {
+        const hash = window.location.hash.substring(1);
+        if (hash && ['upload', 'manage', 'users', 'settings'].includes(hash)) {
+            if (state.isAuthenticated) {
+                switchSection(hash);
+            }
+        }
     });
     
     // File upload
@@ -1078,7 +1090,6 @@ async function init() {
         switchSection('upload');
     }
 }
-=======
 // ===== Hash-based navigation =====
 function handleHashChange() {
     const hash = window.location.hash.substring(1);
@@ -1108,18 +1119,6 @@ async function init() {
         } else {
             switchSection('upload');
         }
-    }
-}=====
-async function init() {
-    setupEventListeners();
-    
-    // Check authentication
-    const isAuthenticated = await checkAuth();
-    updateUI();
-    
-    // If authenticated, switch to upload section
-    if (isAuthenticated) {
-        switchSection('upload');
     }
 }
 
