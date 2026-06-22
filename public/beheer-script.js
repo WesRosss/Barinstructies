@@ -543,24 +543,35 @@ function showTagSuggestions() {
 // ===== Video Management =====
 async function loadVideos() {
     try {
-        const response = await fetch('/api/videos', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('beheerToken')}`
-            }
+        const response = await fetch(`${config.apiBase}/videos`, {
+            headers: getAuthHeaders()
         });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Fout bij laden van video\'s');
+        }
         
         const videos = await response.json();
         state.videos = videos;
         renderVideosList();
     } catch (error) {
         console.error('Error loading videos:', error);
-        showToast('Fout bij laden van video\'s', 'error');
+        showToast(error.message || 'Fout bij laden van video\'s', 'error');
     }
 }
 
 async function loadTags() {
     try {
-        const response = await fetch('/api/tags');
+        const response = await fetch(`${config.apiBase}/tags`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Fout bij laden van tags');
+        }
+        
         const tags = await response.json();
         state.allTags = tags;
         
@@ -568,6 +579,7 @@ async function loadTags() {
         updateTagFilter();
     } catch (error) {
         console.error('Error loading tags:', error);
+        showToast(error.message || 'Fout bij laden van tags', 'error');
     }
 }
 
@@ -714,12 +726,13 @@ async function deleteVideo(video) {
             headers: getAuthHeaders()
         });
         
-        if (response.ok) {
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
             showToast('Video succesvol verwijderd', 'success');
             loadVideos();
         } else {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Verwijderen mislukt');
+            throw new Error(data.message || 'Verwijderen mislukt');
         }
     } catch (error) {
         console.error('Delete error:', error);
@@ -735,12 +748,15 @@ async function loadUsers() {
         });
         
         const data = await response.json();
-        if (response.ok) {
-            state.users = data.users;
+        if (response.ok && data.success) {
+            state.users = data.users || [];
             renderUsersList();
+        } else {
+            throw new Error(data.message || 'Fout bij laden van gebruikers');
         }
     } catch (error) {
         console.error('Error loading users:', error);
+        showToast(error.message || 'Fout bij laden van gebruikers', 'error');
     }
 }
 
@@ -834,7 +850,7 @@ async function saveUser() {
         
         const data = await response.json();
         
-        if (response.ok) {
+        if (response.ok && data.success) {
             showToast(id ? 'Gebruiker succesvol bijgewerkt' : 'Gebruiker succesvol toegevoegd', 'success');
             elements.userModal.classList.add('hidden');
             elements.userForm.reset();
@@ -859,12 +875,13 @@ async function deleteUser(user) {
             headers: getAuthHeaders()
         });
         
-        if (response.ok) {
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
             showToast('Gebruiker succesvol verwijderd', 'success');
             loadUsers();
         } else {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Verwijderen mislukt');
+            throw new Error(data.message || 'Verwijderen mislukt');
         }
     } catch (error) {
         console.error('Delete user error:', error);
@@ -881,12 +898,17 @@ async function loadSettings() {
         
         const data = await response.json();
         
-        // Update status indicators
-        updateStatusIndicator(elements.cdnStatus, data.cdnEnabled, 'CDN is actief', 'CDN is niet actief');
-        updateStatusIndicator(elements.thumbnailStatus, data.thumbnailGeneration, 'Thumbnail generatie is actief', 'Thumbnail generatie is niet actief');
-        updateStatusIndicator(elements.compressionStatus, data.videoCompression, 'Video compressie is actief', 'Video compressie is niet actief');
+        if (response.ok && data.success) {
+            // Update status indicators
+            updateStatusIndicator(elements.cdnStatus, data.cdnEnabled, 'CDN is actief', 'CDN is niet actief');
+            updateStatusIndicator(elements.thumbnailStatus, data.thumbnailGeneration, 'Thumbnail generatie is actief', 'Thumbnail generatie is niet actief');
+            updateStatusIndicator(elements.compressionStatus, data.videoCompression, 'Video compressie is actief', 'Video compressie is niet actief');
+        } else {
+            throw new Error(data.message || 'Fout bij laden van instellingen');
+        }
     } catch (error) {
         console.error('Error loading settings:', error);
+        showToast(error.message || 'Fout bij laden van instellingen', 'error');
     }
 }
 

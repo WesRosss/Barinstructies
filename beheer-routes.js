@@ -608,6 +608,36 @@ router.delete('/users/:id', authenticate, authorize(['admin']), (req, res) => {
     }
 });
 
+// Get Tags
+router.get('/tags', authenticate, async (req, res) => {
+    try {
+        const files = fs.readdirSync(VIDEOS_DIR);
+        const tags = new Set();
+        
+        for (const file of files) {
+            if (file.endsWith('.json')) {
+                try {
+                    const jsonData = fs.readFileSync(path.join(VIDEOS_DIR, file), 'utf8');
+                    const metadata = JSON.parse(jsonData);
+                    if (metadata.tags && Array.isArray(metadata.tags)) {
+                        metadata.tags.forEach(tag => tags.add(tag));
+                    }
+                } catch (e) {
+                    console.error(`Error reading metadata for ${file}:`, e.message);
+                }
+            }
+        }
+        
+        res.json(Array.from(tags).sort());
+    } catch (error) {
+        console.error('Error getting tags:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Fout bij ophalen van tags' 
+        });
+    }
+});
+
 // Get Settings
 router.get('/settings', authenticate, (req, res) => {
     res.json({
