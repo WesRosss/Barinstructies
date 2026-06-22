@@ -214,7 +214,8 @@ body {
         display: block !important;
     }
     
-    .sidebar.hidden {
+    .sidebar.hidden,
+    #sidebar.hidden {
         display: block !important;
     }
 }
