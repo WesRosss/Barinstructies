@@ -6,23 +6,6 @@ const https = require('https');
 const http = require('http');
 
 const app = express();
-
-// Auto-upload static files to CDN on startup (if configured)
-if (process.env.AUTO_UPLOAD_TO_CDN === 'true' && 
-    process.env.BUNNYCDN_ACCESS_KEY && 
-    process.env.BUNNYCDN_PASSWORD) {
-    console.log('Auto-upload to CDN enabled. Running cdn-upload script...');
-    try {
-        // Run the CDN upload script in a separate process
-        const cdnUploadProcess = execSync('node cdn-upload.js', { 
-            stdio: 'inherit',
-            env: process.env
-        });
-        console.log('CDN upload completed.');
-    } catch (error) {
-        console.error('Error during CDN upload:', error.message);
-    }
-}
 const PORT = process.env.PORT || 3210;
 const VIDEOS_DIR = path.join(__dirname, 'videos');
 const TEMP_DIR = path.join(__dirname, 'temp');

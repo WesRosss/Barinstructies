@@ -179,13 +179,6 @@ body {
     display: none;
 }
 
-/* Hide menu toggle on desktop since sidebar is always visible */
-@media (min-width: 769px) {
-    .menu-toggle {
-        display: none !important;
-    }
-}
-
 .menu-toggle svg {
     width: 24px;
     height: 24px;

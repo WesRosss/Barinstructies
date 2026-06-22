@@ -18,26 +18,6 @@ let state = {
     isUploading: false
 };
 
-const elements = {
-    // Login
-    loginSection: document.getElementById('login-section'),
-    beheerSection: document.getElementById('beheer-section'),
-    loginForm: document.getElementById('login-form'),
-    loginError: document.getElementById('login-error'),
-    
-    // Header
-    userInfo: document.getElementById('user-info'),
-    logoutBtn: document.getElementById('logout-btn'),
-    menuToggle: document.getElementById('menu-toggle'),
-    
-    // Sidebar
-    sidebar: document.getElementById('sidebar'),
-    
-    // Sections
-    uploadSection: document.getElementById('upload-section'),
-    manageSection: document.getElementById('manage-section'),
-    settingsSection: document.getElementById('settings-section'),
-=======
 // ===== DOM Elements =====
 const elements = {
     // Login
@@ -58,25 +38,6 @@ const elements = {
     uploadSection: document.getElementById('upload-section'),
     manageSection: document.getElementById('manage-section'),
     usersSection: document.getElementById('users-section'),
-    settingsSection: document.getElementById('settings-section'),=====
-const elements = {
-    // Login
-    loginSection: document.getElementById('login-section'),
-    beheerSection: document.getElementById('beheer-section'),
-    loginForm: document.getElementById('login-form'),
-    loginError: document.getElementById('login-error'),
-    
-    // Header
-    userInfo: document.getElementById('user-info'),
-    logoutBtn: document.getElementById('logout-btn'),
-    menuToggle: document.getElementById('menu-toggle'),
-    
-    // Sidebar
-    sidebar: document.getElementById('sidebar'),
-    
-    // Sections
-    uploadSection: document.getElementById('upload-section'),
-    manageSection: document.getElementById('manage-section'),
     settingsSection: document.getElementById('settings-section'),
     
     // Upload Form
@@ -939,19 +900,11 @@ function updateStatusIndicator(element, isActive, activeText, inactiveText) {
 
 // ===== Event Listeners =====
 function setupEventListeners() {
-    // Login - Always use POST, never GET
+    // Login
     elements.loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        
-        // Clear any URL parameters that might contain credentials
-        const url = new URL(window.location.href);
-        if (url.searchParams.has('username') || url.searchParams.has('password')) {
-            url.searchParams.delete('username');
-            url.searchParams.delete('password');
-            window.history.replaceState({}, '', url.toString());
-        }
         
         try {
             await login(username, password);
