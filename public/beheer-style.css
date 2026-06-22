@@ -179,6 +179,13 @@ body {
     display: none;
 }
 
+/* Hide menu toggle on desktop since sidebar is always visible */
+@media (min-width: 769px) {
+    .menu-toggle {
+        display: none !important;
+    }
+}
+
 .menu-toggle svg {
     width: 24px;
     height: 24px;
@@ -206,6 +213,13 @@ body {
     top: var(--header-height);
     height: calc(100vh - var(--header-height));
     overflow-y: auto;
+}
+
+/* Show sidebar on desktop by default */
+@media (min-width: 769px) {
+    .sidebar {
+        display: block !important;
+    }
 }
 
 .sidebar ul {
@@ -243,6 +257,13 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+}
+
+/* Adjust main content when sidebar is visible */
+@media (min-width: 769px) {
+    .beheer-main {
+        margin-left: var(--sidebar-width);
+    }
 }
 
 /* Sections */
