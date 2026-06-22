@@ -691,13 +691,15 @@ router.post('/upload', authenticate, uploadLimiter, upload.single('video'), asyn
         const tempVideoPath = req.file.path;
         const originalFilename = req.file.originalname;
         const ext = path.extname(originalFilename).toLowerCase();
-        const baseName = path.basename(originalFilename, ext);
-        const safeBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, '_');
-        const finalFilename = `${safeBaseName}_${Date.now()}${ext}`;
+        
+        // Use title for filename (sanitized)
+        const safeTitle = title.replace(/[^a-zA-Z0-9-_\s]/g, '_').replace(/\s+/g, '_').toLowerCase();
+        const timestamp = Date.now();
+        const finalFilename = `${safeTitle}_${timestamp}${ext}`;
         const finalVideoPath = path.join(VIDEOS_DIR, finalFilename);
-        const thumbnailFilename = `${safeBaseName}_${Date.now()}.jpg`;
+        const thumbnailFilename = `${safeTitle}_${timestamp}.jpg`;
         const thumbnailPath = path.join(VIDEOS_DIR, thumbnailFilename);
-        const metadataPath = path.join(VIDEOS_DIR, `${safeBaseName}_${Date.now()}.json`);
+        const metadataPath = path.join(VIDEOS_DIR, `${safeTitle}_${timestamp}.json`);
         
         // Step 1: Compress video
         const compressedFilename = `compressed_${finalFilename}`;
@@ -721,7 +723,7 @@ router.post('/upload', authenticate, uploadLimiter, upload.single('video'), asyn
             description,
             tags: parsedTags,
             filename: finalFilename,
-            basename: safeBaseName,
+            basename: safeTitle,
             originalFilename,
             uploadedAt: new Date().toISOString(),
             uploadedBy: req.user.username
