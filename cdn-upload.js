@@ -248,7 +248,7 @@ function replaceLocalReferences() {
             
             // Replace image references
             content = content.replace(
-                /(src|href)="(images\/|[^"\/]+\(png|jpg|jpeg|gif|svg|ico))/g,
+                /(src|href)="(images\/|[^"\/]+\.(png|jpg|jpeg|gif|svg|ico))/g,
                 `$1="${CDN_BASE_URL}/$2`
             );
             
