@@ -84,6 +84,37 @@ De server detecteert automatisch nieuwe video's bij herstart.
 | `BUNNYCDN_ACCESS_KEY` | - | BunnyCDN API sleutel |
 | `BUNNYCDN_PASSWORD` | - | BunnyCDN wachtwoord |
 | `BUNNYCDN_STORAGE_ZONE` | instructievideos | BunnyCDN storage zone |
+| `AUTO_UPLOAD_TO_CDN` | false | Upload statische bestanden automatisch bij opstarten |
+
+### Automatische CDN Upload
+
+Om statische bestanden (CSS, JS, HTML, afbeeldingen, video's) automatisch naar BunnyCDN te uploaden bij opstarten:
+
+1. **Configureer omgevingsvariabelen:**
+   ```bash
+   BUNNYCDN_ACCESS_KEY=your-access-key
+   BUNNYCDN_PASSWORD=your-password
+   BUNNYCDN_STORAGE_ZONE=your-storage-zone
+   AUTO_UPLOAD_TO_CDN=true
+   ```
+
+2. **Start de server:**
+   ```bash
+   docker-compose down
+   docker-compose up -d
+   ```
+
+De server uploadt dan automatisch alle statische bestanden naar BunnyCDN en vervangt de lokale referenties door CDN URLs.
+
+**Handmatig uploaden:**
+```bash
+# Voer het CDN upload script handmatig uit
+node cdn-upload.js
+```
+
+**Let op:** Na het uploaden moet je:
+- De BunnyCDN cache leegmaken (Purge Cache in BunnyCDN dashboard)
+- De server herstarten om de bijgewerkte HTML/CSS/JS bestanden te laden
 
 ### Docker Compose
 
