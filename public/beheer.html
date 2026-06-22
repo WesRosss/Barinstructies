@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Beheer - Bar Instructies</title>
-    <link rel="stylesheet" href="beheer-style.css">
+    <link rel="stylesheet" href="/beheer-style.css">
 </head>
 <body>
     <div id="beheer-app">
@@ -18,7 +18,7 @@
                 <h1>Bar Instructies Beheer</h1>
                 <p>Meld je aan om video's te uploaden en te beheren</p>
                 
-                <form id="login-form" class="login-form" method="post">
+                <form id="login-form" class="login-form" method="post" action="/beheer/api/login">
                     <div class="form-group">
                         <label for="username">Gebruikersnaam</label>
                         <input type="text" id="username" name="username" required autocomplete="username">
@@ -278,6 +278,6 @@
             useCdn: window.USE_CDN !== false && window.USE_CDN !== 'false'
         };
     </script>
-    <script src="beheer-script.js"></script>
+    <script src="/beheer-script.js"></script>
 </body>
 </html>

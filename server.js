@@ -78,6 +78,9 @@ app.get('/beheer', (req, res) => {
 
 // Serve beheer static files
 app.use('/beheer', express.static('public'));
+// Also serve beheer-specific files from root path for direct access
+app.use('/beheer-style.css', express.static('public/beheer-style.css'));
+app.use('/beheer-script.js', express.static('public/beheer-script.js'));
 
 // Security: Block access to beheer from bots and scrapers
 app.use('/beheer*', (req, res, next) => {
