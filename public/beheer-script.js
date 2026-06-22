@@ -1066,7 +1066,50 @@ function setupEventListeners() {
     });
 }
 
+async function init() {
+    setupEventListeners();
+    
+    // Check authentication
+    const isAuthenticated = await checkAuth();
+    updateUI();
+    
+    // If authenticated, switch to upload section
+    if (isAuthenticated) {
+        switchSection('upload');
+    }
+}
+=======
+// ===== Hash-based navigation =====
+function handleHashChange() {
+    const hash = window.location.hash.substring(1);
+    if (hash && ['upload', 'manage', 'users', 'settings'].includes(hash)) {
+        if (state.isAuthenticated) {
+            switchSection(hash);
+        }
+    }
+}
+
 // ===== Initialization =====
+async function init() {
+    setupEventListeners();
+    
+    // Handle hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    // Check authentication
+    const isAuthenticated = await checkAuth();
+    updateUI();
+    
+    // If authenticated, switch to upload section or handle hash
+    if (isAuthenticated) {
+        const hash = window.location.hash.substring(1);
+        if (hash && ['upload', 'manage', 'users', 'settings'].includes(hash)) {
+            switchSection(hash);
+        } else {
+            switchSection('upload');
+        }
+    }
+}=====
 async function init() {
     setupEventListeners();
     

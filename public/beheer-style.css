@@ -213,6 +213,10 @@ body {
     .sidebar {
         display: block !important;
     }
+    
+    .sidebar.hidden {
+        display: block !important;
+    }
 }
 
 .sidebar ul {
