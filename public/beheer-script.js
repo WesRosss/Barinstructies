@@ -939,11 +939,19 @@ function updateStatusIndicator(element, isActive, activeText, inactiveText) {
 
 // ===== Event Listeners =====
 function setupEventListeners() {
-    // Login
+    // Login - Always use POST, never GET
     elements.loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
+        
+        // Clear any URL parameters that might contain credentials
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('username') || url.searchParams.has('password')) {
+            url.searchParams.delete('username');
+            url.searchParams.delete('password');
+            window.history.replaceState({}, '', url.toString());
+        }
         
         try {
             await login(username, password);
