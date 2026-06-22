@@ -273,7 +273,7 @@ function updateUI() {
     }
 }
 
-function switchSection(section) {
+async function switchSection(section) {
     state.currentSection = section;
     
     // Hide all sections
@@ -289,15 +289,15 @@ function switchSection(section) {
             break;
         case 'manage':
             elements.manageSection.classList.add('active');
-            loadVideos();
+            await loadVideos();
             break;
         case 'users':
             elements.usersSection.classList.add('active');
-            loadUsers();
+            await loadUsers();
             break;
         case 'settings':
             elements.settingsSection.classList.add('active');
-            loadSettings();
+            await loadSettings();
             break;
     }
     
@@ -947,10 +947,10 @@ function setupEventListeners() {
     
     // Sidebar navigation
     elements.sidebar.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', (e) => {
+        link.addEventListener('click', async (e) => {
             e.preventDefault();
             const section = link.getAttribute('href').substring(1);
-            switchSection(section);
+            await switchSection(section);
             // Update URL hash
             window.location.hash = section;
         });
