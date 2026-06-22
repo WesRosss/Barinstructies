@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Beheer - Bar Instructies</title>
+    <link rel="stylesheet" href="beheer-style.css">
+</head>
+<body>
+    <div id="beheer-app">
+        <!-- Login Section -->
+        <div id="login-section" class="login-section">
+            <div class="login-container">
+                <div class="logo-container">
+                    <img src="https://storage.knltb.club/logos/425815f0-b74b-47a4-85b2-44a53ffbfb07.jpg" alt="Tennis- en padelvereniging Uitwijk" class="logo">
+                </div>
+                <h1>Bar Instructies Beheer</h1>
+                <p>Meld je aan om video's te uploaden en te beheren</p>
+                
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="username">Gebruikersnaam</label>
+                        <input type="text" id="username" name="username" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Wachtwoord</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Aanmelden</button>
+                    <div id="login-error" class="error-message hidden"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Beheer Section -->
+        <div id="beheer-section" class="beheer-section hidden">
+            <header class="beheer-header">
+                <div class="header-left">
+                    <button id="menu-toggle" class="menu-toggle" aria-label="Menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <h1>Bar Instructies Beheer</h1>
+                </div>
+                <div class="header-right">
+                    <span id="user-info" class="user-info"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Uitloggen</button>
+                </div>
+            </header>
+
+            <nav id="sidebar" class="sidebar hidden">
+                <ul>
+                    <li><a href="#upload" class="active">Video Uploaden</a></li>
+                    <li><a href="#manage">Video's Beheren</a></li>
+                    <li><a href="#settings">Instellingen</a></li>
+                </ul>
+            </nav>
+
+            <main class="beheer-main">
+                <!-- Upload Section -->
+                <section id="upload-section" class="section active">
+                    <h2>Video Uploaden</h2>
+                    <p class="section-description">Upload nieuwe instructievideo's. Video's worden automatisch gecomprimeerd en naar de CDN gestuurd.</p>
+                    
+                    <form id="upload-form" class="upload-form" enctype="multipart/form-data">
+                        <div class="upload-container">
+                            <div class="drop-zone" id="drop-zone">
+                                <input type="file" id="video-file" name="video" accept="video/mp4,video/webm,video/quicktime" required>
+                                <div class="drop-zone-content">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17,8 12,3 7,8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    <h3>Sleep video hierheen</h3>
+                                    <p>of</p>
+                                    <button type="button" id="select-file-btn" class="btn btn-secondary">Selecteer bestand</button>
+                                    <p class="file-hint">Max. 500MB, MP4 aanbevolen</p>
+                                </div>
+                            </div>
+                            <div id="file-preview" class="file-preview hidden">
+                                <div class="preview-info">
+                                    <span id="preview-filename"></span>
+                                    <span id="preview-size"></span>
+                                </div>
+                                <video id="preview-video" controls class="preview-video hidden"></video>
+                                <button type="button" id="remove-file-btn" class="btn-icon remove-btn" aria-label="Verwijder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 6L6 18M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Video Informatie</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="video-title">Titel *</label>
+                                    <input type="text" id="video-title" name="title" required placeholder="Bijv. Bier tappen">
+                                </div>
+                                <div class="form-group">
+                                    <label for="video-description">Beschrijving</label>
+                                    <textarea id="video-description" name="description" rows="3" placeholder="Korte beschrijving van de instructie..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Tags</h3>
+                            <p class="form-hint">Voeg tags toe om video's makkelijk terug te vinden. Scheid tags met komma's.</p>
+                            <div class="form-group">
+                                <label for="video-tags">Tags *</label>
+                                <input type="text" id="video-tags" name="tags" required placeholder="Bijv. bier, tappen, bar">
+                                <div id="tags-suggestions" class="tags-suggestions hidden"></div>
+                            </div>
+                            <div id="tags-container" class="tags-container">
+                                <!-- Tags will be added here dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" id="upload-btn" class="btn btn-primary" disabled>
+                                <span id="upload-btn-text">Uploaden</span>
+                                <span id="upload-spinner" class="spinner hidden"></span>
+                            </button>
+                            <button type="button" id="cancel-upload-btn" class="btn btn-secondary">Annuleren</button>
+                        </div>
+
+                        <div id="upload-progress" class="upload-progress hidden">
+                            <div class="progress-bar-container">
+                                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-info">
+                                <span id="progress-text">Video wordt geüpload...</span>
+                                <span id="progress-percentage">0%</span>
+                            </div>
+                            <div id="upload-status" class="upload-status"></div>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Manage Section -->
+                <section id="manage-section" class="section hidden">
+                    <h2>Video's Beheren</h2>
+                    <p class="section-description">Bekijk en beheer alle geüploade video's.</p>
+                    
+                    <div class="manage-controls">
+                        <div class="search-filter">
+                            <input type="text" id="manage-search" placeholder="Zoek video's...">
+                            <select id="manage-tag-filter">
+                                <option value="">Alle tags</option>
+                            </select>
+                        </div>
+                        <button id="refresh-videos-btn" class="btn btn-secondary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6"/>
+                                <path d="M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            Vernieuwen
+                        </button>
+                    </div>
+
+                    <div id="videos-list" class="videos-list">
+                        <!-- Videos will be loaded here -->
+                        <div class="loading-placeholder">
+                            <div class="spinner"></div>
+                            <p>Video's worden geladen...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings-section" class="section hidden">
+                    <h2>Instellingen</h2>
+                    <p class="section-description">Beheer gebruikers en systeeminstellingen.</p>
+                    
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <h3>Gebruikersbeheer</h3>
+                            <div id="users-list" class="users-list">
+                                <!-- Users will be loaded here -->
+                            </div>
+                            <button id="add-user-btn" class="btn btn-primary">Nieuwe gebruiker toevoegen</button>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3>Systeem Instellingen</h3>
+                            <div class="form-group">
+                                <label>CDN Status</label>
+                                <div id="cdn-status" class="status-indicator"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Thumbnail Generatie</label>
+                                <div id="thumbnail-status" class="status-indicator"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Video Compressie</label>
+                                <div id="compression-status" class="status-indicator"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Modal for video details -->
+            <div id="video-modal" class="modal hidden">
+                <div class="modal-content">
+                    <button class="modal-close btn-icon" aria-label="Sluiten">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                    <div id="modal-body"></div>
+                </div>
+            </div>
+
+            <!-- Modal for user management -->
+            <div id="user-modal" class="modal hidden">
+                <div class="modal-content modal-small">
+                    <button class="modal-close btn-icon" aria-label="Sluiten">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                    <h2 id="user-modal-title">Nieuwe Gebruiker</h2>
+                    <form id="user-form" class="user-form">
+                        <input type="hidden" id="user-id" name="id">
+                        <div class="form-group">
+                            <label for="user-username">Gebruikersnaam *</label>
+                            <input type="text" id="user-username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-password">Wachtwoord *</label>
+                            <input type="password" id="user-password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-role">Rol</label>
+                            <select id="user-role" name="role">
+                                <option value="admin">Administrator</option>
+                                <option value="user">Gebruiker</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Opslaan</button>
+                            <button type="button" class="btn btn-secondary modal-cancel">Annuleren</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Toast notifications -->
+            <div id="toast-container" class="toast-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        window.BEHEER_CONFIG = {
+            apiBase: '/beheer/api',
+            cdnBaseUrl: window.CDN_BASE_URL || 'https://cdn.barinstructies.nl',
+            useCdn: window.USE_CDN !== false && window.USE_CDN !== 'false'
+        };
+    </script>
+    <script src="beheer-script.js"></script>
+</body>
+</html>

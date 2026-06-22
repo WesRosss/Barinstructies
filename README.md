@@ -1,6 +1,6 @@
 # Barinstructies
 
-Een simpele, snelle website voor het tonen van instructievideo's voor barmedewerkers. Mobile-first ontwerp met zoekfunctie, tag-filtering en view-toggle (grid/lijst).
+Een simpele, snelle website voor het tonen van instructievideo's voor barmedewerkers. Mobile-first ontwerp met zoekfunctie, tag-filtering en view-toggle (grid/lijst). **Nieuw:** Beheeromgeving voor het uploaden en beheren van video's.
 
 ## Snel Starten
 
@@ -16,9 +16,22 @@ docker-compose up -d
 ```
 
 De website is nu beschikbaar op `http://localhost:3210`
+De beheeromgeving is beschikbaar op `http://localhost:3210/beheer`
 
 ### 2. Video's Toevoegen
 
+Er zijn twee manieren om video's toe te voegen:
+
+#### Methode 1: Via Beheeromgeving (Aanbevolen)
+1. Ga naar `http://localhost:3210/beheer`
+2. Meld je aan met de standaard admin credentials:
+   - Gebruikersnaam: `admin`
+   - Wachtwoord: `admin123`
+3. Upload je video via de upload pagina
+4. Voer titel, beschrijving en tags in
+5. De video wordt automatisch gecomprimeerd, thumbnail gegenereerd en naar de CDN gestuurd
+
+#### Methode 2: Handmatig (Legacy)
 Plaats je MP4 video's in de `videos/` directory. Voor elke video kun je een JSON bestand met dezelfde naam toevoegen voor metadata:
 
 ```json
@@ -35,6 +48,24 @@ Plaats je MP4 video's in de `videos/` directory. Voor elke video kun je een JSON
 
 De server detecteert automatisch nieuwe video's bij herstart.
 
+## Beheeromgeving
+
+### Functionaliteiten
+- **Aanmelden**: Veilige authenticatie met JWT tokens
+- **Video Upload**: Upload video's tot 500MB, automatisch compressie en thumbnail generatie
+- **CDN Integratie**: Automatische upload naar BunnyCDN (indien geconfigureerd)
+- **Tag Beheer**: Voeg tags toe voor betere zoekresultaten
+- **Gebruikersbeheer**: Beheer gebruikers en rollen (admin only)
+- **Video Beheer**: Bekijk, bewerk en verwijder video's
+- **Instellingen**: Bekijk systeeminstellingen
+
+### Beveiliging
+- **Rate Limiting**: Beperking van login pogingen en uploads
+- **Security Headers**: XSS, Clickjacking, en andere beveiligingsheaders
+- **Bot Blokkering**: robots.txt en user-agent filtering
+- **No-Index**: Beheerpagina's zijn niet vindbaar voor zoekmachines
+- **HTTPS Aanbevolen**: Gebruik altijd HTTPS in productie
+
 ## Docker Configuratie
 
 ### Omgevingsvariabelen
@@ -48,6 +79,11 @@ De server detecteert automatisch nieuwe video's bij herstart.
 | `GENERATE_THUMBNAILS` | true | Genereer automatisch thumbnails (true/false) |
 | `THUMBNAIL_WIDTH` | 320 | Breedte van thumbnails in pixels |
 | `THUMBNAIL_HEIGHT` | 180 | Hoogte van thumbnails in pixels |
+| `JWT_SECRET` | random | JWT geheim voor authenticatie |
+| `JWT_EXPIRES_IN` | 24h | Verloopstijd van JWT tokens |
+| `BUNNYCDN_ACCESS_KEY` | - | BunnyCDN API sleutel |
+| `BUNNYCDN_PASSWORD` | - | BunnyCDN wachtwoord |
+| `BUNNYCDN_STORAGE_ZONE` | instructievideos | BunnyCDN storage zone |
 
 ### Docker Compose
 
@@ -156,11 +192,27 @@ USE_CDN=false
 
 ## API Endpoints
 
+### Publieke API
 | Endpoint | Methode | Beschrijving |
 |----------|---------|--------------|
 | `/api/videos` | GET | Lijst van alle video's met metadata |
 | `/api/tags` | GET | Lijst van alle unieke tags |
 | `/videos/*` | GET | Statische video bestanden |
+
+### Beheer API (Vereist authenticatie)
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| `/beheer/api/login` | POST | Aanmelden en JWT token ontvangen |
+| `/beheer/api/logout` | POST | Uitloggen |
+| `/beheer/api/check-auth` | GET | Controleer authenticatie status |
+| `/beheer/api/upload` | POST | Upload nieuwe video |
+| `/beheer/api/videos` | GET | Lijst van alle video's (beheer) |
+| `/beheer/api/videos/:filename` | DELETE | Verwijder video |
+| `/beheer/api/users` | GET | Lijst van gebruikers (admin only) |
+| `/beheer/api/users` | POST | Voeg nieuwe gebruiker toe (admin only) |
+| `/beheer/api/users/:id` | PUT | Bewerk gebruiker (admin only) |
+| `/beheer/api/users/:id` | DELETE | Verwijder gebruiker (admin only) |
+| `/beheer/api/settings` | GET | Systeeminstellingen |
 
 ## Project Structuur
 
@@ -170,10 +222,19 @@ Barinstructies/
 ├── docker-compose.yml      # Docker Compose configuratie
 ├── package.json            # Node.js dependencies
 ├── server.js               # Express server
+├── beheer-routes.js        # Beheer API routes
+├── data/                   # Gebruikersdata
+│   └── users.json          # Gebruikersdatabase
 ├── public/
 │   ├── index.html          # Hoofd pagina
 │   ├── style.css           # Mobile-first styling
-│   └── script.js           # Client-side logic
+│   ├── script.js           # Client-side logic
+│   ├── beheer.html         # Beheer pagina
+│   ├── beheer-style.css    # Beheer styling
+│   ├── beheer-script.js    # Beheer client-side logic
+│   └── robots.txt          # Bot blokkering
+├── temp/                   # Tijdelijke uploads
+├── uploads/                # Upload directory
 └── videos/                 # Video bestanden en metadata
     ├── video1.mp4
     ├── video1.json
@@ -187,6 +248,9 @@ Barinstructies/
 - **Container**: Docker + Docker Compose
 - **Styling**: Mobile-first CSS met CSS Variables
 - **Prestaties**: Intersection Observer, lazy loading
+- **Authenticatie**: JWT (JSON Web Tokens)
+- **Upload**: Multer voor file uploads
+- **Beveiliging**: Helmet, Rate Limiting, Security Headers
 
 ## Tips
 
