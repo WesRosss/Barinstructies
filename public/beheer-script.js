@@ -18,7 +18,47 @@ let state = {
     isUploading: false
 };
 
+const elements = {
+    // Login
+    loginSection: document.getElementById('login-section'),
+    beheerSection: document.getElementById('beheer-section'),
+    loginForm: document.getElementById('login-form'),
+    loginError: document.getElementById('login-error'),
+    
+    // Header
+    userInfo: document.getElementById('user-info'),
+    logoutBtn: document.getElementById('logout-btn'),
+    menuToggle: document.getElementById('menu-toggle'),
+    
+    // Sidebar
+    sidebar: document.getElementById('sidebar'),
+    
+    // Sections
+    uploadSection: document.getElementById('upload-section'),
+    manageSection: document.getElementById('manage-section'),
+    settingsSection: document.getElementById('settings-section'),
+=======
 // ===== DOM Elements =====
+const elements = {
+    // Login
+    loginSection: document.getElementById('login-section'),
+    beheerSection: document.getElementById('beheer-section'),
+    loginForm: document.getElementById('login-form'),
+    loginError: document.getElementById('login-error'),
+    
+    // Header
+    userInfo: document.getElementById('user-info'),
+    logoutBtn: document.getElementById('logout-btn'),
+    menuToggle: document.getElementById('menu-toggle'),
+    
+    // Sidebar
+    sidebar: document.getElementById('sidebar'),
+    
+    // Sections
+    uploadSection: document.getElementById('upload-section'),
+    manageSection: document.getElementById('manage-section'),
+    usersSection: document.getElementById('users-section'),
+    settingsSection: document.getElementById('settings-section'),=====
 const elements = {
     // Login
     loginSection: document.getElementById('login-section'),
@@ -278,6 +318,7 @@ function switchSection(section) {
     // Hide all sections
     elements.uploadSection.classList.remove('active');
     elements.manageSection.classList.remove('active');
+    elements.usersSection.classList.remove('active');
     elements.settingsSection.classList.remove('active');
     
     // Show selected section
@@ -290,13 +331,11 @@ function switchSection(section) {
             loadVideos();
             break;
         case 'users':
-            // Show settings section but focus on users tab
-            elements.settingsSection.classList.add('active');
+            elements.usersSection.classList.add('active');
             loadUsers();
             break;
         case 'settings':
             elements.settingsSection.classList.add('active');
-            loadUsers();
             loadSettings();
             break;
     }

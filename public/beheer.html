@@ -54,17 +54,17 @@
 
             <nav id="sidebar" class="sidebar hidden">
                 <ul>
-                    <li><a href="#upload" class="active">1. Video Uploaden</a></li>
-                    <li><a href="#manage">2. Video's Beheren</a></li>
-                    <li><a href="#users">3. Gebruikers Beheren</a></li>
-                    <li><a href="#settings">4. Systeem Instellingen</a></li>
+                    <li><a href="#upload" class="active">Uploaden</a></li>
+                    <li><a href="#manage">Beheren</a></li>
+                    <li><a href="#users">Gebruikers</a></li>
+                    <li><a href="#settings">Instellingen</a></li>
                 </ul>
             </nav>
 
             <main class="beheer-main">
                 <!-- Upload Section -->
                 <section id="upload-section" class="section active">
-                    <h2>Video Uploaden</h2>
+                    <h2>Uploaden</h2>
                     <p class="section-description">Upload nieuwe instructievideo's. Video's worden automatisch gecomprimeerd en naar de website gestuurd.</p>
                     
                     <form id="upload-form" class="upload-form" enctype="multipart/form-data">
@@ -147,7 +147,7 @@
 
                 <!-- Manage Section -->
                 <section id="manage-section" class="section hidden">
-                    <h2>Video's Beheren</h2>
+                    <h2>Beheren</h2>
                     <p class="section-description">Bekijk en beheer alle geüploade video's.</p>
                     
                     <div class="manage-controls">
@@ -176,10 +176,10 @@
                     </div>
                 </section>
 
-                <!-- Settings Section -->
-                <section id="settings-section" class="section hidden">
-                    <h2>Instellingen</h2>
-                    <p class="section-description">Beheer gebruikers en systeeminstellingen.</p>
+                <!-- Users Section -->
+                <section id="users-section" class="section hidden">
+                    <h2>Gebruikers</h2>
+                    <p class="section-description">Beheer gebruikers en rollen.</p>
                     
                     <div class="settings-container">
                         <div class="settings-card">
@@ -190,6 +190,16 @@
                             <button id="add-user-btn" class="btn btn-primary">Nieuwe gebruiker toevoegen</button>
                         </div>
 
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings-section" class="section hidden">
+                    <h2>Instellingen</h2>
+                    <p class="section-description">Bekijk systeeminstellingen.</p>
+                    
+                    <div class="settings-container">
                         <div class="settings-card">
                             <h3>Systeem Instellingen</h3>
                             <div class="form-group">
