@@ -9,9 +9,14 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
+=======
 const router = express.Router();
 
-// ===== Configuration =====
+// Middleware for JSON and URL-encoded body parsing
+router.use(express.json());
+router.use(express.urlencoded({ extended: true }));
+
+// ===== Configuration ==========
 const VIDEOS_DIR = path.join(__dirname, 'videos');
 const TEMP_DIR = path.join(__dirname, 'temp');
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
