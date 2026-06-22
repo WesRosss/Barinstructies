@@ -9,7 +9,6 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
-=======
 const router = express.Router();
 
 // Middleware for JSON and URL-encoded body parsing
