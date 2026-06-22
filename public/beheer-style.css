@@ -270,11 +270,7 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
-.section.active,
-#upload-section.active,
-#manage-section.active,
-#users-section.active,
-#settings-section.active {
+.section.active {
     display: block !important;
 }
 
