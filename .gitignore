@@ -5,3 +5,29 @@ videos/*
 .env
 .env.local
 .env.*.local
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Temporary files
+temp/
+uploads/
+
+# Data files (keep users.json for development)
+data/
+!data/users.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

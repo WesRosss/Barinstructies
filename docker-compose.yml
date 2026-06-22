@@ -7,6 +7,12 @@ services:
     volumes:
       # Mount the videos directory from host to container
       - ./videos:/app/videos
+      # Mount temp directory for uploads
+      - ./temp:/app/temp
+      # Mount uploads directory
+      - ./uploads:/app/uploads
+      # Mount data directory for users.json
+      - ./data:/app/data
     restart: unless-stopped
     env_file:
       - .env
@@ -19,3 +25,6 @@ services:
       - HAS_LOCAL_VIDEOS=false
       - THUMBNAIL_WIDTH=320
       - THUMBNAIL_HEIGHT=180
+      - JWT_SECRET=your-very-secure-jwt-secret-change-this-in-production
+      - BUNNYCDN_STORAGE_ZONE=instructievideos
+      - BUNNYCDN_REGION_ENDPOINT=https://storage.bunnycdn.com

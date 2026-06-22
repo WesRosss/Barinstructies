@@ -1,8 +1,8 @@
 # Use Node.js LTS version
 FROM node:18-alpine
 
-# Install ffmpeg for thumbnail generation
-RUN apk add --no-cache ffmpeg
+# Install ffmpeg and other dependencies for video processing
+RUN apk add --no-cache ffmpeg curl git
 
 # Set working directory
 WORKDIR /app
@@ -17,8 +17,11 @@ RUN npm install --omit=dev --no-audit --no-fund
 # Copy application files
 COPY . .
 
-# Create videos directory
-RUN mkdir -p /app/videos
+# Create required directories
+RUN mkdir -p /app/videos /app/temp /app/uploads /app/data
+
+# Set permissions for upload directories
+RUN chmod -R 755 /app/videos /app/temp /app/uploads /app/data
 
 # Expose port
 EXPOSE 3210

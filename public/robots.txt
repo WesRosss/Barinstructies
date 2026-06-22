@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /beheer
+Disallow: /beheer/
+Disallow: /beheer/api
+Disallow: /beheer/api/
+
+# Allow main site
+Allow: /
+
+# Crawl delay for polite crawling
+Crawl-delay: 5

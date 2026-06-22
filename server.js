@@ -38,6 +38,69 @@ if (!fs.existsSync(TEMP_DIR)) {
 app.use(express.json());
 app.use(express.static('public'));
 
+// Security middleware
+app.use((req, res, next) => {
+    // Set general security headers
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    next();
+});
+
+// Initialize beheer routes
+const { router: beheerRouter, initializeUsersFile } = require('./beheer-routes');
+
+// Initialize users file
+initializeUsersFile();
+
+// Mount beheer routes
+app.use('/beheer/api', beheerRouter);
+
+// Serve beheer HTML page
+app.get('/beheer', (req, res) => {
+    fs.readFile(path.join(__dirname, 'public', 'beheer.html'), 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).send('Error loading beheer page');
+        }
+        
+        // Inject configuration
+        const html = data
+            .replace('window.CDN_BASE_URL = \'https://cdn.barinstructies.nl\';', 
+                     `window.CDN_BASE_URL = '${CDN_BASE_URL}';`)
+            .replace('window.USE_CDN = true;', 
+                     `window.USE_CDN = ${USE_CDN};`);
+        
+        res.send(html);
+    });
+});
+
+// Serve beheer static files
+app.use('/beheer', express.static('public'));
+
+// Security: Block access to beheer from bots and scrapers
+app.use('/beheer*', (req, res, next) => {
+    const userAgent = req.headers['user-agent'] || '';
+    const isBot = /bot|spider|crawl|scraper|curl|wget|python-requests|java|go-http-client/i.test(userAgent);
+    
+    if (isBot) {
+        // Return 404 for bots
+        return res.status(404).send('Not Found');
+    }
+    
+    next();
+});
+
+// robots.txt to block beheer
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *
+Disallow: /beheer
+Disallow: /beheer/
+`);
+});
+
 // Function to download file from URL
 function downloadFile(url, destinationPath) {
     return new Promise((resolve, reject) => {
