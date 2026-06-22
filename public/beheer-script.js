@@ -289,6 +289,11 @@ function switchSection(section) {
             elements.manageSection.classList.add('active');
             loadVideos();
             break;
+        case 'users':
+            // Show settings section but focus on users tab
+            elements.settingsSection.classList.add('active');
+            loadUsers();
+            break;
         case 'settings':
             elements.settingsSection.classList.add('active');
             loadUsers();
